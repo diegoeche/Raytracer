@@ -29,7 +29,7 @@ object SceneParser extends StandardTokenParsers {
 
   def parse(s:String) = {
     val tokens = new lexical.Scanner(s)
-    phrase(sphereP)(tokens) match {
+    phrase(planeP)(tokens) match {
       case Success(tree,_) => tree
       case _ => null
     }
