@@ -42,12 +42,10 @@ object SceneParser extends StandardTokenParsers {
                   {case center ~ radius => f(center, radius)}
   
   def sphereP = 
-    vectorValueP("sphere", {case (center,radius) => 
-                               new Sphere(center, radius)})
+    vectorValueP("sphere", {case (center,radius) => new Sphere(center, radius)})
 
-  def planeP = vectorValueP("plane", 
-                             {case (center,radius) => 
-                               new Plane(center, radius)})
+  def planeP = 
+    vectorValueP("plane", {case (center,radius) => new Plane(center, radius)})
   
   def cameraP = ("camera" ~> "{" ~> "location"~> vectorLitP ) ~
                 ( "look_at" ~> vectorLitP <~ "}") ^^
@@ -57,12 +55,28 @@ object SceneParser extends StandardTokenParsers {
                ("color"~>colorP <~ "}")^^ 
                { case location ~ color => new LightSource (location,new Color3f (color)) }
 
+  def sceneObjP = sphereP | planeP | cameraP | lightP
+
+  // The scene is just a list of SceneObjects
+  def sceneP: Parser[List[SceneObject]] = rep(sceneObjP)
 
   def parse(s:String) = {
     val tokens = new lexical.Scanner(s)
-    phrase(planeP)(tokens) match {
-      case Success(tree,_) => tree
-      case _ => null
+    // Check there's only one camera.
+    def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) == 1
+    // lastFailure = None
+    phrase(sceneP)(tokens) match {
+      case Success(tree,_) => 
+        if (checkTree(tree)) {
+          Right(tree)
+        }else{
+          Left("Error in the number of cameras.")
+        }
+      case x => Left(x.toString)
     }
   }
+  
+  
 }
+
+
