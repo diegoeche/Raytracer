@@ -12,6 +12,7 @@ object SceneParser extends StandardTokenParsers {
                              "light_source",
                              "location",
                              "look_at",
+			     "pigment",
                              "plane",
                              "Red",
                              "sphere",
@@ -20,13 +21,15 @@ object SceneParser extends StandardTokenParsers {
 
   def valueP = numericLit ^^ (s => s.toDouble) 
   
-  def colorP  = ("Blue"|"Green"|"Red"|"Yellow"|"White") ^^ 
-  { case "Blue"   => Color.blue
-    case "Green"  => Color.green
-    case "Red"    => Color.red
-    case "Yellow" => Color.yellow
-    case "White"  => Color.white }
+  def colorP  = "color" ~>
+                      ("Blue"|"Green"|"Red"|"Yellow"|"White") ^^ 
+                     { case "Blue"   => Color.blue
+		        case "Green"  => Color.green
+		        case "Red"    => Color.red
+		        case "Yellow" => Color.yellow
+		        case "White"  => Color.white }
                  
+  def pigmentP = "pigment" ~> "{" ~> colorP <~ "}" 
 
   def vectorLitP = ("<" ~> valueP) ~ 
                    ("," ~> valueP) ~ 
@@ -35,11 +38,14 @@ object SceneParser extends StandardTokenParsers {
                                                    y.toDouble, 
                                                    z.toDouble)}
 
-  // This one lifts a common constructor of objects like sphere and plane
+  
+
+  // This one lifts a common constructor of objects like sphere and plane 
   def vectorValueP(cons: String, f: Function[(Vector3d, Double), SceneObject]) = 
                   (cons ~> "{" ~> vectorLitP) ~ 
-                  ("," ~> valueP <~ "}") ^^
-                  {case center ~ radius => f(center, radius)}
+                  ("," ~> valueP ) ~
+                  (pigmentP <~ "}")^^
+                  {case center ~ radius ~ pigment=> f(center, radius)}
   
   def sphereP = 
     vectorValueP("sphere", {case (center,radius) => new Sphere(center, radius)})
@@ -52,7 +58,7 @@ object SceneParser extends StandardTokenParsers {
                 { case location ~ lookAt => new Camera (location,lookAt) }
 
   def lightP = ("light_source" ~> "{" ~> vectorLitP)~
-               ("color"~>colorP <~ "}")^^ 
+               (colorP <~ "}")^^ 
                { case location ~ color => new LightSource (location,new Color3f (color)) }
 
   def sceneObjP = sphereP | planeP | cameraP | lightP
