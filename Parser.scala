@@ -5,7 +5,8 @@ import java.awt.Color
 object SceneParser extends StandardTokenParsers {
 
   lexical.delimiters ++= List("<",">",",","{","}")
-  lexical.reserved ++= List( "Blue",
+  lexical.reserved ++= List( "background",
+                             "Blue",
                              "color",
                              "camera",
                              "Green",
@@ -19,8 +20,13 @@ object SceneParser extends StandardTokenParsers {
                              "Yellow",
                              "White")
 
+  // Doesn't accept decimals nor negatives
   def valueP = numericLit ^^ (s => s.toDouble) 
   
+
+
+
+
   def colorP  = "color" ~>
                       ("Blue"|"Green"|"Red"|"Yellow"|"White") ^^ 
                      { case "Blue"   => Color.blue
@@ -40,12 +46,13 @@ object SceneParser extends StandardTokenParsers {
 
   
 
+
   // This one lifts a common constructor of objects like sphere and plane 
   def vectorValueP(cons: String, f: Function[(Vector3d, Double, Color3f), SceneObject]) = 
-                  (cons ~> "{" ~> vectorLitP) ~ 
+                 (cons ~> "{" ~> vectorLitP) ~ 
                   ("," ~> valueP ) ~
-                  (pigmentP <~ "}")^^
-                  {case center ~ radius ~ pigment=> f(center, radius, pigment)}
+                   (pigmentP <~ "}") ^^
+                  {case center ~ radius ~ pigment=> f(center, radius, new Color3f ( pigment ))}
   
   def sphereP = 
     vectorValueP("sphere", {case (center,radius,pigment) => new Sphere(center, radius, pigment)})
@@ -61,22 +68,23 @@ object SceneParser extends StandardTokenParsers {
                (colorP <~ "}")^^ 
                { case location ~ color => new LightSource (location,new Color3f (color)) }
 
-  def sceneObjP = sphereP | planeP | cameraP | lightP
+  def sceneObjP = sphereP | planeP | cameraP | lightP 
 
   // The scene is just a list of SceneObjects
   def sceneP: Parser[List[SceneObject]] = rep(sceneObjP)
 
   def parse(s:String) = {
     val tokens = new lexical.Scanner(s)
-    // Check there's only one camera.
-    def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) == 1
+    // Check there's only one camera and LightSource.
+    def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) ==1   &&
+                                                                    (tree count (_.isInstanceOf[LightSource])) == 1
     // lastFailure = None
     phrase(sceneP)(tokens) match {
       case Success(tree,_) => 
         if (checkTree(tree)) {
           Right(tree)
         }else{
-          Left("Error in the number of cameras.")
+          Left("Error in the number of cameras or light sources.")
         }
       case x => Left(x.toString)
     }
