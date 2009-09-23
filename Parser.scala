@@ -41,17 +41,17 @@ object SceneParser extends StandardTokenParsers {
   
 
   // This one lifts a common constructor of objects like sphere and plane 
-  def vectorValueP(cons: String, f: Function[(Vector3d, Double), SceneObject]) = 
+  def vectorValueP(cons: String, f: Function[(Vector3d, Double, Color3f), SceneObject]) = 
                   (cons ~> "{" ~> vectorLitP) ~ 
                   ("," ~> valueP ) ~
                   (pigmentP <~ "}")^^
-                  {case center ~ radius ~ pigment=> f(center, radius)}
+                  {case center ~ radius ~ pigment=> f(center, radius, pigment)}
   
   def sphereP = 
-    vectorValueP("sphere", {case (center,radius) => new Sphere(center, radius)})
+    vectorValueP("sphere", {case (center,radius,pigment) => new Sphere(center, radius, pigment)})
 
   def planeP = 
-    vectorValueP("plane", {case (center,radius) => new Plane(center, radius)})
+    vectorValueP("plane", {case (center,radius,pigment) => new Plane(center, radius, pigment)})
   
   def cameraP = ("camera" ~> "{" ~> "location"~> vectorLitP ) ~
                 ( "look_at" ~> vectorLitP <~ "}") ^^
