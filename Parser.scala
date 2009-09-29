@@ -49,12 +49,12 @@ object SceneParser extends StandardTokenParsers {
                              "look_at",
 			     "pigment",
                              "plane",
-                             "sphere")
-                             // "Blue",
-                             // "Green",
-                             // "Red",
-                             // "Yellow",
-                             // "White")
+                             "sphere",
+                             "Blue",
+                             "Green",
+                             "Red",
+                             "Yellow",
+                             "White")
 
   // Doesn't accept decimals nor negatives
   def valueP = opt("-") ~ numericLit ^^ 
@@ -66,12 +66,12 @@ object SceneParser extends StandardTokenParsers {
                      { case color => new Background (new Color3f (color)) }
 
 
-  def colorP  = "color" ~> accept( "name", 
-                     {  case Identifier("Blue"  ) => Color.blue
-		        case Identifier("Green" ) => Color.green
-		        case Identifier("Red"   ) => Color.red
-		        case Identifier("Yellow") => Color.yellow
-		        case Identifier("White" ) => Color.white })
+  def colorP  = "color" ~> ("Blue" | "Green" | "Red" | "Yellow" | "White") ^^
+                       {case "Blue"   => Color.blue
+		        case "Green"  => Color.green
+		        case "Red"    => Color.red
+		        case "Yellow" => Color.yellow
+		        case "White"  => Color.white }
                  
   def pigmentP = "pigment" ~> "{" ~> colorP <~ "}" 
 
@@ -108,13 +108,13 @@ object SceneParser extends StandardTokenParsers {
   def sceneObjP = sphereP | planeP | cameraP | lightP | backgroundP
 
   // The scene is just a list of SceneObjects
-  def sceneP: Parser[List[SceneElement]] = rep(sceneObjP)
+  def sceneP: Parser[List[SceneElement]] = sceneObjP+
 
   def parse(s:String) = {
     val tokens = new lexical.Scanner(s)
     // Check there's only one camera and LightSource.
-     // def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) >=0   &&
-     //                                         (tree count (_.isInstanceOf[LightSource])) >= 0
+    def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) >=0   &&
+                                             (tree count (_.isInstanceOf[LightSource])) >= 0
     // lastFailure = None
     phrase(sceneP)(tokens) match {
       case Success(tree,_) => 
@@ -126,8 +126,4 @@ object SceneParser extends StandardTokenParsers {
       case x => Left(x.toString)
     }
   }
-  
-  
 }
-
-

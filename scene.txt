@@ -1,0 +1,5 @@
+sphere{<1,0,0>,1 pigment{color Black}}
+
+
+
+light_source {<-5,20,30> color Yellow}

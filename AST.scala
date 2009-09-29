@@ -1,6 +1,6 @@
 import javax.vecmath._;
 
-class Material(pigment: Color3f)
+case class Material(pigment: Color3f)
 
 class SceneElement
 class Geometry() 
@@ -12,4 +12,3 @@ sealed case class SceneObject (geometry: Geometry, material: Material) extends S
 sealed case class Sphere      (center:Vector3d   , radius: Double)     extends Geometry
 sealed case class Plane	      (point:Vector3d	 , distance: Double) extends Geometry
  
-
