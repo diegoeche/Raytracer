@@ -8,11 +8,26 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.media.j3d._;
 import javax.media.j3d.{Material => JMaterial}
+import javax.media.j3d.{Background => JBackground}
 import javax.vecmath._;
-import com.sun.j3d.utils.applet.MainFrame;
-import com.sun.j3d.utils.universe._;
-import com.sun.j3d.utils._;
- 
+import com.sun.j3d.utils.applet.MainFrame; 
+import com.sun.j3d.utils.universe._; 
+import com.sun.j3d.utils._; 
+
+object Helpers {
+  def plane():Shape3D = {
+    val format = GeometryArray.COORDINATES;
+    val stripCounts = Array(4);
+    val tris = new TriangleStripArray(4, format, stripCounts);
+    val vertices:Array[Double] = Array(-5,  1,  -5,  
+                                        5,  1,  -5,  
+                                       -5,  1,  5,  
+                                        5,  1,  5)
+    tris.setCoordinates(0, vertices);
+    new Shape3D(tris);
+  }
+}
+
 object Main extends Application {
   val applet = new Applet() {
     // Configuration
@@ -29,30 +44,29 @@ object Main extends Application {
  
     def process(l: List[SceneElement]) = {
       l.foreach {
-        case Background(c) => () // TODO
-        case LightSource(l,c) => 
-             // Lights
+        case Background(c) => {
+          val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE)
+          val backg = new JBackground (c) 
+          backg.setApplicationBounds (bounds)
+          scene.addChild (backg)
+        }        
+        case LightSource(l,c) => {
+          // Lights
           val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE);
-          val ambientLgt = new AmbientLight();
-
+          val ambientLgt = new AmbientLight(c);
           ambientLgt.setInfluencingBounds(bounds);
-        
           val lColor1 = new Color3f (c) //Color3f(0.7f, 0.7f, 0.7f);
           val lDir1  = new Vector3f (l);
-
           val dirLgt = new DirectionalLight(lColor1, lDir1);
           dirLgt.setInfluencingBounds(bounds);
-        
-         // Add Lights
+          // Add Lights
           scene.addChild(ambientLgt);
           scene.addChild(dirLgt);       
-       
+        }
         case Camera(l,la) => () // TODO
         case SceneObject(g,Material(pigment)) =>
           val tg = new TransformGroup()
           val pos = new Transform3D()
-
-
           val black = new Color3f(0.0f, 0.0f, 0.0f);
           val white = new Color3f(1.0f, 1.0f, 1.0f);
           val app = new Appearance ();
@@ -61,22 +75,17 @@ object Main extends Application {
               
           g match {
             case Sphere(c, r) => {
-              
-              
-
-
-              val sphere = new geometry.Sphere(r.toFloat,app)
+              val sphere = new geometry.Sphere(r.toFloat, app)
               pos.set(c)
               tg.setTransform(pos)
               tg.addChild(sphere)
               scene.addChild(tg)
             }
         }
- 
         case _ => ()
       }
     }
- 
+
     def parseScene() = {
       val text = io.Source.fromPath("scene.txt").mkString
       SceneParser.parse(text) match {
@@ -84,12 +93,11 @@ object Main extends Application {
         case Right(tree) => process(tree);
       }
     }
- 
+
     def createSceneGraph(): BranchGroup = {
       val objRoot = new BranchGroup();
-
       return objRoot;
-    }
+    } 
   }
   new MainFrame(applet, 256, 256);
 }
