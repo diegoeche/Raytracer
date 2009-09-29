@@ -69,7 +69,7 @@ object Main extends Application {
               
           g match {
             case Sphere(c, r) => {
-              val sphere = new geometry.Sphere(r.toFloat)
+              val sphere = new geometry.Sphere(r.toFloat, app)
               pos.set(c)
               tg.setTransform(pos)
               tg.addChild(sphere)
