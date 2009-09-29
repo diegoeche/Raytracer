@@ -33,7 +33,7 @@ object Main extends Application {
         case LightSource(l,c) => 
              // Lights
           val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE);
-          val ambientLgt = new AmbientLight(c);
+          val ambientLgt = new AmbientLight();
 
           ambientLgt.setInfluencingBounds(bounds);
         
@@ -44,8 +44,8 @@ object Main extends Application {
           dirLgt.setInfluencingBounds(bounds);
         
          // Add Lights
-         scene.addChild(ambientLgt);
-         scene.addChild(dirLgt);       
+          scene.addChild(ambientLgt);
+          scene.addChild(dirLgt);       
        
         case Camera(l,la) => () // TODO
         case SceneObject(g,Material(pigment)) =>
