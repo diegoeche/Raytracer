@@ -8,18 +8,45 @@ import java.util.Enumeration;
 import java.util.Vector;
 import javax.media.j3d._;
 import javax.media.j3d.{Material => JMaterial}
+import javax.media.j3d.{Background => JBackground}
 import javax.vecmath._;
 import com.sun.j3d.utils.applet.MainFrame; 
 import com.sun.j3d.utils.universe._; 
 import com.sun.j3d.utils._; 
 
 object Helpers {
-  def plane():Shape3D = {
+  def plane(v: Vector3d, d: Double):Shape3D = {
+    val v1 = new Vector3d;
+    val v2 = new Vector3d;
+    val t3dA = new Transform3D();
+    t3dA.set(v)
+    val t3dB = new Transform3D(t3dA);
+    (v.x, v.y, v.z) match {
+      case (x, 0.0, 0.0) if x * x == 1 => {
+        t3dA.rotY(Math.Pi/2)
+        t3dB.rotZ(Math.Pi/2)
+      }
+      case (0.0, y, 0.0) if y * y == 1 => {
+        t3dA.rotX(Math.Pi/2)
+        t3dB.rotZ(Math.Pi/2)
+      }
+      case _  => {
+        t3dA.rotX(Math.Pi/2)
+        t3dB.rotY(Math.Pi/2)
+      }
+    }
+    t3dA.get(v1)
+    t3dB.get(v2)
+    // Point in plane
+    val pointPlane = new Vector3d()
+    pointPlane.scale(d,v) 
+
     val format = GeometryArray.COORDINATES;
     val stripCounts = Array(4);
+    
     val tris = new TriangleStripArray(4, format, stripCounts);
-    val vertices:Array[Double] = Array(-5,  1,  -5,  
-                                        5,  1,  -5,  
+    val vertices:Array[Double] = Array(-5,  1, -5,  
+                                        5,  1, -5,  
                                        -5,  1,  5,  
                                         5,  1,  5)
     tris.setCoordinates(0, vertices);
@@ -43,7 +70,12 @@ object Main extends Application {
  
     def process(l: List[SceneElement]) = {
       l.foreach {
-        case Background(c) => () // TODO
+        case Background(c) => {
+          val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE)
+          val backg = new JBackground (c) 
+          backg.setApplicationBounds (bounds)
+          scene.addChild (backg)
+        }        
         case LightSource(l,c) => {
           // Lights
           val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE);
