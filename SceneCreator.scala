@@ -12,6 +12,20 @@ import com.sun.j3d.utils.applet.MainFrame;
 import com.sun.j3d.utils.universe._; 
 import com.sun.j3d.utils._; 
 
+object Helpers {
+  def plane():Shape3D = {
+    val format = GeometryArray.COORDINATES;
+    val stripCounts = Array(4);
+    val tris = new TriangleStripArray(4, format, stripCounts);
+    val vertices:Array[Double] = Array(-5,  1,  -5,  
+                                        5,  1,  -5,  
+                                       -5,  1,  5,  
+                                        5,  1,  5)
+    tris.setCoordinates(0, vertices);
+    new Shape3D(tris);
+  }
+}
+
 object Main extends Application {
   val applet = new Applet() {
     // Configuration
@@ -43,7 +57,6 @@ object Main extends Application {
               scene.addChild(tg)
             }
         }
-
         case _                => ()
       }
     }
@@ -72,7 +85,7 @@ object Main extends Application {
       // Add Lights
       objRoot.addChild(ambientLgt);
       objRoot.addChild(dirLgt);
-      
+      objRoot.addChild(Helpers.plane())
       return objRoot;
     } 
   }
