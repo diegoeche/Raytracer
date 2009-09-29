@@ -1,1 +1,3 @@
-sphere{<0,0,-10>,2 pigment{color Blue}}
+sphere{<0,0,-10>,1 pigment{color White}}
+
+light_source {<-5,20,30> color Yellow}
