@@ -42,7 +42,6 @@ object Helpers {
 
     val format = GeometryArray.COORDINATES;
     val stripCounts = Array(4);
-    
     val tris = new TriangleStripArray(4, format, stripCounts);
     val vertices:Array[Double] = Array((pp.x - v1.x + v2.x),(pp.y - v1.y + v2.y),(pp.z - v1.z + v2.z),
                                        (pp.x + v1.x + v2.x),(pp.y + v1.y + v2.y),(pp.z + v1.z + v2.z),  
@@ -98,11 +97,11 @@ object Main extends Application {
         }
         case Camera(l,la) => () // TODO
         case SceneObject(g,Material(pigment)) =>
-          val tg = new TransformGroup()
-          val pos = new Transform3D()
-          val black = new Color3f(0.0f, 0.0f, 0.0f);
-          val white = new Color3f(1.0f, 1.0f, 1.0f);
-          val app = new Appearance ();
+          val tg    = new TransformGroup()
+          val pos   = new Transform3D()
+          val black = new Color3f(0.0f, 0.0f, 0.0f)
+          val white = new Color3f(1.0f, 1.0f, 1.0f)
+          val app   = new Appearance ()
           val color = new Color3f(pigment)
           app.setMaterial ( new JMaterial (color,black,color,white,80.0f))
               
