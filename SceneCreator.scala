@@ -73,6 +73,9 @@ object Main extends Application {
     val simpleU = new SimpleUniverse(canvas3D);
  
     simpleU.getViewingPlatform().setNominalViewingTransform();
+    
+    val scene = createSceneGraph();
+    parseScene(); 
     simpleU.addBranchGraph(scene);
  
     def process(l: List[SceneElement]) = {
@@ -100,13 +103,13 @@ object Main extends Application {
           }
         case Camera(l,la) => 
           {
-            //val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
+            val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
             val t3d    = new Transform3D()
-            t3d.lookAt (new Point3d (l), new Point3d (0,0,0),la)
-            //t3d.setTranslation(l)            
-            //camera.setTransform (t3d)
-            val tg = new TransformGroup (t3d)
-            scene.addChild (tg)
+            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (1.0,0.0,0.0))
+            t3d.setTranslation(l)            
+            camera.setTransform (t3d)
+            //val tg = new TransformGroup (t3d)
+//            scene.addChild (tg)
             
             
           }
@@ -144,7 +147,7 @@ object Main extends Application {
     }
 
     def parseScene() = {
-      val text = io.Source.fromPath("scene.txt").mkString
+      val text = io.Source.fromPath("scene.pov").mkString
       SceneParser.parse(text) match {
         case Left(err)   => {println(err); exit(0);}
         case Right(tree) => process(tree);
