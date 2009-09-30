@@ -37,6 +37,10 @@ object Helpers {
     }
     t3dA.transform(v1)
     t3dB.transform(v2)
+
+    v1.scale(1000)
+    v2.scale(1000)
+
     // pp = Point in plane
     val pp = new Vector3d()
     pp.scale(d,v) 
@@ -89,23 +93,23 @@ object Main extends Application {
           }        
         case LightSource(l,c) => 
           {
-            // Lights
+            // Lightsl
             val bounds     = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE) 
-            val ambientLgt = new AmbientLight(c)                                
-            ambientLgt.setInfluencingBounds(bounds)                             
+//            val ambientLgt = new AmbientLight(c)                                
+//            ambientLgt.setInfluencingBounds(bounds)                             
             val lColor1    = new Color3f (c)                                    
             val lDir1      = new Vector3f (l)                                   
             val ptLgt      = new PointLight(true,lColor1,new Point3f(lDir1),new Point3f (1,0,0))               
             ptLgt.setInfluencingBounds(bounds)                                 
             // Add Lights
-            scene.addChild(ambientLgt)
+//            scene.addChild(ambientLgt)
             scene.addChild(ptLgt)       
           }
         case Camera(l,la) => 
           {
             val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
             val t3d    = new Transform3D()
-            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (1.0,0.0,0.0))
+            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (0.0,-1.0,0.0))
             t3d.setTranslation(l)            
             camera.setTransform (t3d)
             //val tg = new TransformGroup (t3d)
