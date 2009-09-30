@@ -15,11 +15,10 @@ import com.sun.j3d.utils.universe._;
 import com.sun.j3d.utils._; 
 
 object Helpers {
-  def plane(v: Vector3d, d: Double):Shape3D = {
-    val v1 = new Vector3d;
-    val v2 = new Vector3d;
+  def plane(v: Vector3d, d: Double, a: Appearance):Shape3D = {
+    val v1 = new Vector3d(v);
+    val v2 = new Vector3d(v);
     val t3dA = new Transform3D();
-    t3dA.set(v)
     val t3dB = new Transform3D(t3dA);
     (v.x, v.y, v.z) match {
       case (x, 0.0, 0.0) if x * x == 1 => {
@@ -35,22 +34,30 @@ object Helpers {
         t3dB.rotY(Math.Pi/2)
       }
     }
-    t3dA.get(v1)
-    t3dB.get(v2)
-    // Point in plane
-    val pointPlane = new Vector3d()
-    pointPlane.scale(d,v) 
+    t3dA.transform(v1)
+    t3dB.transform(v2)
+    // pp = Point in plane
+    val pp = new Vector3d()
+    pp.scale(d,v) 
 
     val format = GeometryArray.COORDINATES;
     val stripCounts = Array(4);
     
     val tris = new TriangleStripArray(4, format, stripCounts);
-    val vertices:Array[Double] = Array(-5,  1, -5,  
-                                        5,  1, -5,  
-                                       -5,  1,  5,  
-                                        5,  1,  5)
+    val vertices:Array[Double] = Array((pp.x - v1.x + v2.x),(pp.y - v1.y + v2.y),(pp.z - v1.z + v2.z),
+                                       (pp.x + v1.x + v2.x),(pp.y + v1.y + v2.y),(pp.z + v1.z + v2.z),  
+                                       (pp.x - v1.x - v2.x),(pp.y - v1.y - v2.y),(pp.z - v1.z - v2.z),  
+                                       (pp.x + v1.x - v2.x),(pp.y + v1.y - v2.y),(pp.z + v1.z - v2.z))
+    
+    // for (v <- vertices) {
+    //   println(v)
+    // }
+    
     tris.setCoordinates(0, vertices);
-    new Shape3D(tris);
+    val pa = new PolygonAttributes()
+    pa.setCullFace(PolygonAttributes.CULL_NONE)
+    a.setPolygonAttributes(pa)
+    new Shape3D(tris, a);
   }
 }
 
@@ -81,7 +88,7 @@ object Main extends Application {
           val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE);
           val ambientLgt = new AmbientLight(c);
           ambientLgt.setInfluencingBounds(bounds);
-          val lColor1 = new Color3f (c) //Color3f(0.7f, 0.7f, 0.7f);
+          val lColor1 = new Color3f (c) 
           val lDir1  = new Vector3f (l);
           val dirLgt = new DirectionalLight(lColor1, lDir1);
           dirLgt.setInfluencingBounds(bounds);
@@ -107,11 +114,14 @@ object Main extends Application {
               tg.addChild(sphere)
               scene.addChild(tg)
             }
+            case Plane(c, r) => {
+              val plane = Helpers.plane(c, r.toFloat, app)
+              scene.addChild(plane)
+            }
         }
         case _ => ()
       }
     }
-
     def parseScene() = {
       val text = io.Source.fromPath("scene.txt").mkString
       SceneParser.parse(text) match {
@@ -119,7 +129,6 @@ object Main extends Application {
         case Right(tree) => process(tree);
       }
     }
-
     def createSceneGraph(): BranchGroup = {
       val objRoot = new BranchGroup();
       return objRoot;
