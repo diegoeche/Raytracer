@@ -54,8 +54,8 @@ object SceneParser extends StandardTokenParsers {
                              "Green",
                              "Red",
                              "Yellow",
-                             "White",
-                             "Black")
+                             "Black",
+                             "White")
 
   // Doesn't accept decimals nor negatives
   def valueP = opt("-") ~ numericLit ^^ 
@@ -73,7 +73,8 @@ object SceneParser extends StandardTokenParsers {
 		        case "Red"    => Color.red
 		        case "Yellow" => Color.yellow
 		        case "White"  => Color.white 
-		        case "Black"  => Color.black }
+		        case "Black"  => Color.black
+                      }
                  
   def pigmentP = "pigment" ~> "{" ~> colorP <~ "}" 
 
