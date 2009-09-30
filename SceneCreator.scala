@@ -69,13 +69,14 @@ object Main extends Application {
           }
         case Camera(l,la) => 
           {
-            //val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
+            val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
             val t3d    = new Transform3D()
             t3d.lookAt (new Point3d (l), new Point3d (0,0,0),la)
+            t3d.invert ();
             //t3d.setTranslation(l)            
-            //camera.setTransform (t3d)
-            val tg = new TransformGroup (t3d)
-            scene.addChild (tg)
+            camera.setTransform (t3d)
+            //val tg = new TransformGroup (t3d)
+            //scene.addChild (tg)
             
             
           }
