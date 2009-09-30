@@ -15,16 +15,51 @@ import com.sun.j3d.utils.universe._;
 import com.sun.j3d.utils._; 
 
 object Helpers {
-  def plane():Shape3D = {
+  def plane(v: Vector3d, d: Double, a: Appearance):Shape3D = {
+    val v1 = new Vector3d(v);
+    val v2 = new Vector3d(v);
+    val t3dA = new Transform3D();
+    val t3dB = new Transform3D(t3dA);
+
+    (v.x, v.y, v.z) match {
+      case (x, 0.0, 0.0) if x * x == 1 => {
+        t3dA.rotY(Math.Pi/2)
+        t3dB.rotZ(Math.Pi/2)
+      }
+      case (0.0, y, 0.0) if y * y == 1 => {
+        t3dA.rotX(Math.Pi/2)
+        t3dB.rotZ(Math.Pi/2)
+      }
+      case _  => {
+        t3dA.rotX(Math.Pi/2)
+        t3dB.rotY(Math.Pi/2)
+      }
+    }
+    t3dA.transform(v1)
+    t3dB.transform(v2)
+    // pp = Point in plane
+    val pp = new Vector3d()
+    pp.scale(d,v) 
+
     val format = GeometryArray.COORDINATES;
     val stripCounts = Array(4);
     val tris = new TriangleStripArray(4, format, stripCounts);
-    val vertices:Array[Double] = Array(-5,  1,  -5,  
-                                        5,  1,  -5,  
-                                       -5,  1,  5,  
-                                        5,  1,  5)
+
+    val vertices:Array[Double] = 
+      Array((pp.x - v1.x + v2.x),(pp.y - v1.y + v2.y),(pp.z - v1.z + v2.z),
+            (pp.x + v1.x + v2.x),(pp.y + v1.y + v2.y),(pp.z + v1.z + v2.z),  
+            (pp.x - v1.x - v2.x),(pp.y - v1.y - v2.y),(pp.z - v1.z - v2.z),  
+            (pp.x + v1.x - v2.x),(pp.y + v1.y - v2.y),(pp.z + v1.z - v2.z))
+    
+    // for (v <- vertices) {
+    //   println(v)
+    // }
+    
     tris.setCoordinates(0, vertices);
-    new Shape3D(tris);
+    val pa = new PolygonAttributes()
+    pa.setCullFace(PolygonAttributes.CULL_NONE)
+    a.setPolygonAttributes(pa)
+    new Shape3D(tris, a);
   }
 }
 
@@ -36,15 +71,14 @@ object Main extends Application {
     val canvas3D = new Canvas3D(config);
     add("Center", canvas3D);
     val simpleU = new SimpleUniverse(canvas3D);
-    //simpleU.getViewingPlatform().setNominalViewingTransform()
+ 
+    //simpleU.getViewingPlatform().setNominalViewingTransform();
+    
     val scene = createSceneGraph();
-    parseScene();    
+    parseScene(); 
     simpleU.addBranchGraph(scene);
-
-
  
     def process(l: List[SceneElement]) = {
-      
       l.foreach {
         case Background(c) =>
           {
@@ -71,12 +105,11 @@ object Main extends Application {
           {
             val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
             val t3d    = new Transform3D()
-            t3d.lookAt (new Point3d (l), new Point3d (0,0,0),la)
-            t3d.invert ();
-            //t3d.setTranslation(l)            
+            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (0.0,1.0,0.0))
+            t3d.setTranslation(l)            
             camera.setTransform (t3d)
             //val tg = new TransformGroup (t3d)
-            //scene.addChild (tg)
+//            scene.addChild (tg)
             
             
           }
@@ -97,6 +130,10 @@ object Main extends Application {
               tg.addChild(sphere)
               scene.addChild(tg)
             }
+            case Plane(c, r) => {
+              val plane = Helpers.plane(c, r.toFloat, app)
+              scene.addChild(plane)
+            }
         }
         case _ => ()
       }
@@ -112,7 +149,7 @@ object Main extends Application {
     def parseScene() = {
       val text = io.Source.fromPath("scene.txt").mkString
       SceneParser.parse(text) match {
-        case Left(err) => {println(err); exit(0);}
+        case Left(err)   => {println(err); exit(0);}
         case Right(tree) => process(tree);
       }
     }
