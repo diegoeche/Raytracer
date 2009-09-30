@@ -3,3 +3,5 @@ sphere{< 0,0,-10>,1 pigment{color Yellow}}
 
 light_source {<0,10,-10> color White}
 background {color Blue}
+camera {location <0,0,4> look_at <0,0,0>}
+      
