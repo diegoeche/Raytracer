@@ -35,15 +35,16 @@ object Main extends Application {
     val config = SimpleUniverse.getPreferredConfiguration();
     val canvas3D = new Canvas3D(config);
     add("Center", canvas3D);
-    val scene = createSceneGraph();
-    parseScene();
     val simpleU = new SimpleUniverse(canvas3D);
-    
+    //simpleU.getViewingPlatform().setNominalViewingTransform()
+    val scene = createSceneGraph();
+    parseScene();    
     simpleU.addBranchGraph(scene);
 
 
  
     def process(l: List[SceneElement]) = {
+      
       l.foreach {
         case Background(c) =>
           {
@@ -60,18 +61,22 @@ object Main extends Application {
             ambientLgt.setInfluencingBounds(bounds)                             
             val lColor1    = new Color3f (c)                                    
             val lDir1      = new Vector3f (l)                                   
-            val dirLgt     = new DirectionalLight(lColor1, lDir1)               
-            dirLgt.setInfluencingBounds(bounds)                                 
+            val ptLgt      = new PointLight(true,lColor1,new Point3f(lDir1),new Point3f (1,0,0))               
+            ptLgt.setInfluencingBounds(bounds)                                 
             // Add Lights
             scene.addChild(ambientLgt)
-            scene.addChild(dirLgt)       
+            scene.addChild(ptLgt)       
           }
         case Camera(l,la) => 
           {
-            val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
-            var t3d    = new Transform3D()
-            t3d.setTranslation(l)
-            camera.setTransform (t3d)             
+            //val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
+            val t3d    = new Transform3D()
+            t3d.lookAt (new Point3d (l), new Point3d (0,0,0),la)
+            //t3d.setTranslation(l)            
+            //camera.setTransform (t3d)
+            val tg = new TransformGroup (t3d)
+            scene.addChild (tg)
+            
             
           }
         case SceneObject(g,Material(pigment)) =>
@@ -98,7 +103,7 @@ object Main extends Application {
 
     def createSceneGraph(): BranchGroup = {
       val objRoot = new BranchGroup();
-      //simpleU.getViewingPlatform().setNominalViewingTransform()
+      
       //objRoot.addChild (simpleU.getViewingPlatform().getViewPlatformTransform())
       return objRoot;
     }
