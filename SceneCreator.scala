@@ -70,8 +70,6 @@ object Main extends Application {
     val config = SimpleUniverse.getPreferredConfiguration();
     val canvas3D = new Canvas3D(config);
     add("Center", canvas3D);
-    val scene = createSceneGraph();
-    parseScene();
     val simpleU = new SimpleUniverse(canvas3D);
  
     simpleU.getViewingPlatform().setNominalViewingTransform();
@@ -79,26 +77,39 @@ object Main extends Application {
  
     def process(l: List[SceneElement]) = {
       l.foreach {
-        case Background(c) => {
-          val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE)
-          val backg = new JBackground (c) 
-          backg.setApplicationBounds (bounds)
-          scene.addChild (backg)
-        }        
-        case LightSource(l,c) => {
-          // Lights
-          val bounds     = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE);
-          val ambientLgt = new AmbientLight(c);
-          val lColor1    = new Color3f (c) 
-          val lDir1      = new Vector3f (l);
-          val dirLgt     = new DirectionalLight(lColor1, lDir1);
-          ambientLgt.setInfluencingBounds(bounds);
-          dirLgt.setInfluencingBounds(bounds);
-          // Add Lights
-          scene.addChild(ambientLgt);
-          scene.addChild(dirLgt);       
-        }
-        case Camera(l,la) => () // TODO
+        case Background(c) =>
+          {
+            val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE)
+            val backg  = new JBackground (c) 
+            backg.setApplicationBounds (bounds)
+            scene.addChild (backg)
+          }        
+        case LightSource(l,c) => 
+          {
+            // Lights
+            val bounds     = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE) 
+            val ambientLgt = new AmbientLight(c)                                
+            ambientLgt.setInfluencingBounds(bounds)                             
+            val lColor1    = new Color3f (c)                                    
+            val lDir1      = new Vector3f (l)                                   
+            val ptLgt      = new PointLight(true,lColor1,new Point3f(lDir1),new Point3f (1,0,0))               
+            ptLgt.setInfluencingBounds(bounds)                                 
+            // Add Lights
+            scene.addChild(ambientLgt)
+            scene.addChild(ptLgt)       
+          }
+        case Camera(l,la) => 
+          {
+            //val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
+            val t3d    = new Transform3D()
+            t3d.lookAt (new Point3d (l), new Point3d (0,0,0),la)
+            //t3d.setTranslation(l)            
+            //camera.setTransform (t3d)
+            val tg = new TransformGroup (t3d)
+            scene.addChild (tg)
+            
+            
+          }
         case SceneObject(g,Material(pigment)) =>
           val tg    = new TransformGroup()
           val pos   = new Transform3D()
@@ -124,6 +135,14 @@ object Main extends Application {
         case _ => ()
       }
     }
+
+    def createSceneGraph(): BranchGroup = {
+      val objRoot = new BranchGroup();
+      
+      //objRoot.addChild (simpleU.getViewingPlatform().getViewPlatformTransform())
+      return objRoot;
+    }
+
     def parseScene() = {
       val text = io.Source.fromPath("scene.txt").mkString
       SceneParser.parse(text) match {
@@ -131,10 +150,8 @@ object Main extends Application {
         case Right(tree) => process(tree);
       }
     }
-    def createSceneGraph(): BranchGroup = {
-      val objRoot = new BranchGroup();
-      return objRoot;
-    } 
+
+   
   }
   new MainFrame(applet, 256, 256);
 }
