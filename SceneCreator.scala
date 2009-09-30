@@ -20,6 +20,7 @@ object Helpers {
     val v2 = new Vector3d(v);
     val t3dA = new Transform3D();
     val t3dB = new Transform3D(t3dA);
+
     (v.x, v.y, v.z) match {
       case (x, 0.0, 0.0) if x * x == 1 => {
         t3dA.rotY(Math.Pi/2)
@@ -43,10 +44,12 @@ object Helpers {
     val format = GeometryArray.COORDINATES;
     val stripCounts = Array(4);
     val tris = new TriangleStripArray(4, format, stripCounts);
-    val vertices:Array[Double] = Array((pp.x - v1.x + v2.x),(pp.y - v1.y + v2.y),(pp.z - v1.z + v2.z),
-                                       (pp.x + v1.x + v2.x),(pp.y + v1.y + v2.y),(pp.z + v1.z + v2.z),  
-                                       (pp.x - v1.x - v2.x),(pp.y - v1.y - v2.y),(pp.z - v1.z - v2.z),  
-                                       (pp.x + v1.x - v2.x),(pp.y + v1.y - v2.y),(pp.z + v1.z - v2.z))
+
+    val vertices:Array[Double] = 
+      Array((pp.x - v1.x + v2.x),(pp.y - v1.y + v2.y),(pp.z - v1.z + v2.z),
+            (pp.x + v1.x + v2.x),(pp.y + v1.y + v2.y),(pp.z + v1.z + v2.z),  
+            (pp.x - v1.x - v2.x),(pp.y - v1.y - v2.y),(pp.z - v1.z - v2.z),  
+            (pp.x + v1.x - v2.x),(pp.y + v1.y - v2.y),(pp.z + v1.z - v2.z))
     
     // for (v <- vertices) {
     //   println(v)
@@ -84,12 +87,12 @@ object Main extends Application {
         }        
         case LightSource(l,c) => {
           // Lights
-          val bounds = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE);
+          val bounds     = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE);
           val ambientLgt = new AmbientLight(c);
+          val lColor1    = new Color3f (c) 
+          val lDir1      = new Vector3f (l);
+          val dirLgt     = new DirectionalLight(lColor1, lDir1);
           ambientLgt.setInfluencingBounds(bounds);
-          val lColor1 = new Color3f (c) 
-          val lDir1  = new Vector3f (l);
-          val dirLgt = new DirectionalLight(lColor1, lDir1);
           dirLgt.setInfluencingBounds(bounds);
           // Add Lights
           scene.addChild(ambientLgt);
@@ -124,7 +127,7 @@ object Main extends Application {
     def parseScene() = {
       val text = io.Source.fromPath("scene.txt").mkString
       SceneParser.parse(text) match {
-        case Left(err) => {println(err); exit(0);}
+        case Left(err)   => {println(err); exit(0);}
         case Right(tree) => process(tree);
       }
     }
