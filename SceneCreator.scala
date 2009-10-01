@@ -105,13 +105,9 @@ object Main extends Application {
           {
             val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
             val t3d    = new Transform3D()
-            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (1.0,0.0,0.0))
+            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (0.0,1.0,0.0))
             t3d.setTranslation(l)            
             camera.setTransform (t3d)
-            //val tg = new TransformGroup (t3d)
-//            scene.addChild (tg)
-            
-            
           }
         case SceneObject(g,Material(pigment)) =>
           val tg    = new TransformGroup()
