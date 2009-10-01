@@ -94,6 +94,7 @@ object Main extends Application {
         case LightSource(l,c) => 
           {
             // Lightsl
+            l.negate()
             val bounds     = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE) 
 //            val ambientLgt = new AmbientLight(c)                                
 //            ambientLgt.setInfluencingBounds(bounds)                             
@@ -107,6 +108,8 @@ object Main extends Application {
           }
         case Camera(l,la) => 
           {
+            l.negate()
+            la.negate()
             val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
             val t3d    = new Transform3D()
             t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (0.0,-1.0,0.0))
@@ -128,6 +131,7 @@ object Main extends Application {
               
           g match {
             case Sphere(c, r) => {
+              c.negate()
               val sphere = new geometry.Sphere(r.toFloat, app)
               pos.set(c)
               tg.setTransform(pos)
@@ -135,6 +139,7 @@ object Main extends Application {
               scene.addChild(tg)
             }
             case Plane(c, r) => {
+              c.negate()
               val plane = Helpers.plane(c, r.toFloat, app)
               scene.addChild(plane)
             }
