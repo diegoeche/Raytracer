@@ -38,14 +38,14 @@ object Helpers {
     t3dA.transform(v1)
     t3dB.transform(v2)
 
-    v1.scale(1000)
-    v2.scale(1000)
+    v1.scale(75)
+    v2.scale(75)
 
     // pp = Point in plane
     val pp = new Vector3d()
     pp.scale(d,v) 
 
-    val format = GeometryArray.COORDINATES;
+    val format = GeometryArray.COORDINATES | GeometryArray.NORMALS;
     val stripCounts = Array(4);
     val tris = new TriangleStripArray(4, format, stripCounts);
 
@@ -56,8 +56,14 @@ object Helpers {
             (pp.x + v1.x - v2.x),(pp.y + v1.y - v2.y),(pp.z + v1.z - v2.z))
     
     tris.setCoordinates(0, vertices);
+    for (i <- 0 to 3) {
+      val n = new Vector3f(v)
+      tris.setNormal(i, n)
+    }
+
     val pa = new PolygonAttributes()
     pa.setCullFace(PolygonAttributes.CULL_NONE)
+    pa.setBackFaceNormalFlip(true)
     a.setPolygonAttributes(pa)
     new Shape3D(tris, a);
   }
@@ -113,6 +119,9 @@ object Main extends Application {
           val black = new Color3f(0.0f, 0.0f, 0.0f)
           val white = new Color3f(1.0f, 1.0f, 1.0f)
           val app   = new Appearance ()
+          val ca = new ColoringAttributes()
+          ca.setShadeModel(ColoringAttributes.NICEST)
+          app.setColoringAttributes(ca)
           val color = new Color3f(pigment)
           app.setMaterial ( new JMaterial (color,black,color,white,80.0f))
               
