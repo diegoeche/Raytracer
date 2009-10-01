@@ -1,8 +1,33 @@
-sphere{<-5,0, -10>,1 pigment{color Yellow}}
-sphere{< 5,0, -10>,1 pigment{color Blue}}
-plane {< 0,0,  -1>,5 pigment{color White}}
+background { 
+  color Black 
+}
+sphere { 
+  <-2, 2, 3>, 
+  2.5
+  pigment { 
+    color Blue 
+  } 
+}
+sphere { 
+  <2, 2, 5>, 
+  1.5 
+  pigment { 
+    color Red 
+  } 
+}
+light_source { 
+  <-10, 10, -10> 
+  color White
+}  
+plane { 
+  <0, 1, 0>, 
+  -0
+  pigment { 
+    color Green 
+  }
+}
 
-light_source {<0,10,-10> color White}
-background {color Black}
-camera {location <0,0,4> look_at <0,0,1>}
-      
+camera {
+  location <0, 4, -8>
+  look_at  <0, 0, 4>
+}
