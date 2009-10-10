@@ -1,6 +1,15 @@
 -- MIT LICENCE
 -- Small raytracer in Scala.
 
+- Requirements 
+ *Scala 2.8.0
+
+- Install : 
+ "make" will do.
+
+After compiled "scala Main" will render the file declared in scene.pov
+
+
 Authors:
 
 Diego Echeverri.

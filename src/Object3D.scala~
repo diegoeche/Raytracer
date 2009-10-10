@@ -1,0 +1,4 @@
+abstract class Object3D
+{ 
+  def abstract intersect (r:Ray, h:Hit, range:Range,  tMin:TValue): Boolean
+}

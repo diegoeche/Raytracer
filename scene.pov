@@ -9,14 +9,14 @@ sphere {
   } 
 }
 sphere { 
-  <2, 2, 5>, 
+  <4, 2, 5>, 
   1.5 
   pigment { 
     color Red 
   } 
 }
 light_source { 
-  <-10, 10, -10> 
+  <10, 10, -10> 
   color White
 }  
 plane { 

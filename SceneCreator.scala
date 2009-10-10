@@ -38,14 +38,14 @@ object Helpers {
     t3dA.transform(v1)
     t3dB.transform(v2)
 
-    v1.scale(1000)
-    v2.scale(1000)
+    v1.scale(10)
+    v2.scale(10)
 
     // pp = Point in plane
     val pp = new Vector3d()
     pp.scale(d,v) 
 
-    val format = GeometryArray.COORDINATES;
+    val format = GeometryArray.COORDINATES | GeometryArray.NORMALS;
     val stripCounts = Array(4);
     val tris = new TriangleStripArray(4, format, stripCounts);
 
@@ -55,13 +55,15 @@ object Helpers {
             (pp.x - v1.x - v2.x),(pp.y - v1.y - v2.y),(pp.z - v1.z - v2.z),  
             (pp.x + v1.x - v2.x),(pp.y + v1.y - v2.y),(pp.z + v1.z - v2.z))
     
-    // for (v <- vertices) {
-    //   println(v)
-    // }
-    
     tris.setCoordinates(0, vertices);
+    for (i <- 0 to 3) {
+      val n = new Vector3f(v)
+      tris.setNormal(i, n)
+    }
+
     val pa = new PolygonAttributes()
     pa.setCullFace(PolygonAttributes.CULL_NONE)
+    pa.setBackFaceNormalFlip(true)
     a.setPolygonAttributes(pa)
     new Shape3D(tris, a);
   }
@@ -94,31 +96,22 @@ object Main extends Application {
         case LightSource(l,c) => 
           {
             // Lightsl
-            l.negate()
             val bounds     = new BoundingSphere(new Point3d(), Math.MAX_DOUBLE) 
-//            val ambientLgt = new AmbientLight(c)                                
-//            ambientLgt.setInfluencingBounds(bounds)                             
             val lColor1    = new Color3f (c)                                    
             val lDir1      = new Vector3f (l)                                   
             val ptLgt      = new PointLight(true,lColor1,new Point3f(lDir1),new Point3f (1,0,0))               
             ptLgt.setInfluencingBounds(bounds)                                 
-            // Add Lights
-//            scene.addChild(ambientLgt)
             scene.addChild(ptLgt)       
           }
         case Camera(l,la) => 
           {
-            l.negate()
-            la.negate()
             val camera = simpleU.getViewingPlatform().getViewPlatformTransform()
             val t3d    = new Transform3D()
-            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (0.0,-1.0,0.0))
+
+            t3d.lookAt (new Point3d (l), new Point3d (la), new Vector3d (0.0,1.0,0.0))
+            t3d.invert()
             t3d.setTranslation(l)            
             camera.setTransform (t3d)
-            //val tg = new TransformGroup (t3d)
-//            scene.addChild (tg)
-            
-            
           }
         case SceneObject(g,Material(pigment)) =>
           val tg    = new TransformGroup()
@@ -126,12 +119,14 @@ object Main extends Application {
           val black = new Color3f(0.0f, 0.0f, 0.0f)
           val white = new Color3f(1.0f, 1.0f, 1.0f)
           val app   = new Appearance ()
+          val ca = new ColoringAttributes()
+          ca.setShadeModel(ColoringAttributes.NICEST)
+          app.setColoringAttributes(ca)
           val color = new Color3f(pigment)
           app.setMaterial ( new JMaterial (color,black,color,white,80.0f))
               
           g match {
             case Sphere(c, r) => {
-              c.negate()
               val sphere = new geometry.Sphere(r.toFloat, app)
               pos.set(c)
               tg.setTransform(pos)
@@ -139,7 +134,6 @@ object Main extends Application {
               scene.addChild(tg)
             }
             case Plane(c, r) => {
-              c.negate()
               val plane = Helpers.plane(c, r.toFloat, app)
               scene.addChild(plane)
             }
