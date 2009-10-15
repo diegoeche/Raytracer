@@ -1,3 +1,3 @@
 import javax.vecmath._;
 
-case class Hit ( t:Double , color:Color3f ) // They call super in the constructor.. What for  ?
+case class Hit ( var t:Double, var color:Color3f)
