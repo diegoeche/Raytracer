@@ -9,25 +9,21 @@ object Main extends Application {
       var image:Image = new Image ()
       var camera = new OrtographicCamera (1d);
       var group = new Group ( l );
-      println ("Got here !!!!!! \n\n ")
-      for (x <- 0 to size )
+      for (x <- 0 until size )
         {
           var px = (x.toDouble/(size/2.0)) - 1.0
-          for (y <-0 to size)
+          for (y <-0 until size)
             {
               var py = (y.toDouble/(size/2.0)) - 1.0;
               var ray = camera.generateRay( new Point2d (px,py));
-              println ("Is gonna set color");
-             
-             println (px)
-             println (py)
-             group.intersect (ray).color
-             //image.setColor ( px,py,group.intersect (ray).color );
+                          
+              var h =group.intersect (ray).color
+              image.setColor ( x,y, h);
             }
-          println (x )
+          
         }
       println ("Writing")
-      //image.writeImage ();
+      image.writeImage ();
       
          
     }

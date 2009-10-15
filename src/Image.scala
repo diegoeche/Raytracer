@@ -6,13 +6,14 @@ class Image ()
   var  width  = 300;
   var  height = 300;
   
-  var image = Array.ofDim [Point3d] (width,height);
+  var image =  Array.ofDim [Point3i] (300,300);
 
   
   
   def setColor(x:Double ,  y:Double,  color:Color3f) {
-    val myColor = new Point3d ((color.x * 255).toInt, 
+    val myColor = new Point3i ((color.x * 255).toInt, 
 			      (color.y * 255).toInt,(color.z * 255.0).toInt);
+
     image(x.toInt)(y.toInt) = myColor;
   }
 
@@ -43,12 +44,22 @@ class Image ()
 
   def writeImage():Unit=
     {
-
+      var printWriter: PrintWriter = null ;
       try {
-        var printWriter = 
-          new PrintWriter(new BufferedWriter(new FileWriter(new File("image.ppm"))));
+        
+        printWriter =  new PrintWriter(new BufferedWriter(new FileWriter(new File("image.ppm"))));
 
         
+
+      } catch {
+        case _ => {
+                   println ("Errrorrr");
+                   System.exit(1)
+                 } //e.prIntStackTrace();
+        
+      }
+
+      
         printWriter.println("P3");
         printWriter.println("# Created by me");
         printWriter.println(width + " " + height);
@@ -56,7 +67,7 @@ class Image ()
         var i =  height - 1    
         while (i >= 0)
         { 
-          var j = width
+          var j = 0
           while (j < width)
           { 
             printWriter.print(image (j)(i).x + " " + 
@@ -68,11 +79,7 @@ class Image ()
           printWriter.println();
           i = i -1
         }
-
-      } catch {
-        case _ => System.exit(1); //e.prIntStackTrace();
-        
-      }      
+      printWriter.close ();
     }
   
   

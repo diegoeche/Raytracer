@@ -1,10 +1,3 @@
-sphere { 
-  <0, 0, 3>, 
-  2.5
-  pigment { 
-    color Blue 
-  } 
-}
 background { 
   color Black 
 }
@@ -19,3 +12,17 @@ camera {
   look_at  <0, 0, 4>
 }
 
+sphere {
+  <75, 75, -75>,
+  45
+  pigment {
+    color Blue
+  }
+}
+sphere {
+  <75, 30, -135>,
+  45
+  pigment {
+    color Red
+  }
+}

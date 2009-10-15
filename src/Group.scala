@@ -10,11 +10,13 @@ case class Group (var vector:List [SceneElement] )
         {
           var hit     = new Hit (-1,new Color3f ());
           var range   = new Range ();
-          println ("aqui");
-          vector.foreach {
+
+          vector.foreach {            
             case  SceneObject (g,Material (pigment)) =>
+
               g match {
                 case s:Sphere  => {
+
                   s.intersect(ray,hit,range,pigment) match{
                     case Some ((nh,nr)) =>
                       {
@@ -22,9 +24,12 @@ case class Group (var vector:List [SceneElement] )
                         range = nr;
                         
                       }
+                    case _ => ()
                   }
-               }
+                }
+                case _ => ()
               }
+            case _ => ()
           }
           
             // ToDo:
