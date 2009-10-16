@@ -20,8 +20,8 @@ sphere {
   }
 }
 sphere {
-  <0, 0, -500>,
-  0.9
+  <200, 200, -500>,
+  0.1
   pigment {
     color Red
   }

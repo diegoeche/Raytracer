@@ -31,7 +31,7 @@ case class Sphere(center:Vector3d , radius: Double) extends Geometry {
             case l      => {
               val t = l.min
               range.maxT = t
-              println(t)
+ //             println(t)
               Some(new Hit(t,material))
             }
           }
