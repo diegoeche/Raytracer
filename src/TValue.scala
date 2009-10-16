@@ -1,1 +1,1 @@
-case class TValue (t:Double)
+case class TValue (var t:Double)

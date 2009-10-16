@@ -83,7 +83,7 @@ object SceneParser extends StandardTokenParsers {
                    ("," ~> valueP <~ ">") ^^ 
                    {case x ~ y ~ z => new Vector3d(x.toDouble, 
                                                    y.toDouble, 
-                                                   -z.toDouble)}
+                                                   z.toDouble)}
 
   // This one lifts a common constructor of objects like sphere and plane 
   def vectorValueP(cons: String, f: Function[(Vector3d, Double, Color3f), SceneObject]) = 

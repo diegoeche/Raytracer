@@ -1,15 +1,10 @@
 import javax.vecmath._
 import java.io._
 
-class Image ()
+class Image (var width:Int,var height:Int)
 {
-  var  width  = 300;
-  var  height = 300;
   
-  var image =  Array.ofDim [Point3i] (300,300);
-
-  
-  
+  var image =  Array.ofDim [Point3i] (width,height);
   def setColor(x:Double ,  y:Double,  color:Color3f) {
     val myColor = new Point3i ((color.x * 255).toInt, 
 			      (color.y * 255).toInt,(color.z * 255.0).toInt);

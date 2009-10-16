@@ -6,7 +6,7 @@ object Main extends Application {
   def process (l:List[SceneElement]):Unit =
     {
       val size = 300;  
-      var image:Image = new Image ()
+      var image:Image = new Image (size,size)
       var camera = new OrtographicCamera (1d);
       var group = new Group ( l );
       for (x <- 0 until size )

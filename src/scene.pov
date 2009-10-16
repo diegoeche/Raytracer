@@ -1,4 +1,4 @@
-background { 
+background {
   color Black 
 }
 
@@ -13,15 +13,15 @@ camera {
 }
 
 sphere {
-  <75, 75, -75>,
-  45
+  <0, 0, -75>,
+  0.5
   pigment {
     color Blue
   }
 }
 sphere {
-  <75, 30, -135>,
-  45
+  <0, 0, -500>,
+  0.9
   pigment {
     color Red
   }

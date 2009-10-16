@@ -13,25 +13,28 @@ sealed case class SceneObject (geometry: Geometry, material: Material) extends S
 sealed case class Plane	      (point:Vector3d	 , distance: Double) extends Geometry
 case class Sphere(center:Vector3d , radius: Double) extends Geometry {
  
-    def intersect (r:Ray, h:Hit, range:Range,material:Color3f): Option [(Hit,Range)]=
+    def intersect (r:Ray, range:Range, material:Color3f): Option [Hit]=
     { 
-
-      var v            = new Vector3d ( r.origin.x - this.center.x , r.origin.y - this.center.y,r.origin.z - this.center.z);
-      var discriminant = pow (v.dot (r.direction),2.0) - (pow (v.dot(v),2) - pow (radius,2));
+      var v            = new Vector3d ( r.origin.x - (center.x) , r.origin.y - (center.y),r.origin.z - (center.z ));
+      // println((pow (v.dot (r.direction),2.0), ((v.dot(v)) - pow (radius,2)))
+      val dbg1 = pow (v.dot (r.direction),2.0)
+      val dbg2 = ((v.dot(v)) - pow (radius,2))
+      // println(dbg1, dbg2)
+      var discriminant = pow (v.dot (r.direction),2.0) - ((v.dot(v)) - pow (radius,2));      
+      // println(discriminant, v)
       if (discriminant >= 0 )
         {
-          //var t1 = -(v.dot(r.direction)) + sqrt (discriminant);
-           var t = -(v.dot(r.direction)) - sqrt (discriminant);
-          
-          if (t >= range.minT  && t < range.maxT )
-            {
-              var h      = new Hit (t,material);
-              range.maxT = t;
-              
-              return Some (h,range);              
+          var t1 = -(v.dot(r.direction)) + sqrt (discriminant);
+          var t2 = -(v.dot(r.direction)) - sqrt (discriminant);
+          List(t1, t2) filter (t => t >= range.minT && t < range.maxT) match {
+            case List() => None
+            case l      => {
+              val t = l.min
+              range.maxT = t
+              println(t)
+              Some(new Hit(t,material))
             }
-          return None;
-          
+          }
         }
       else              
         return None;
