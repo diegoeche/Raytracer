@@ -1,0 +1,19 @@
+-- MIT LICENCE
+-- Small raytracer in Scala. (Flat Shading)
+
+
+
+- Requirements 
+ *Scala 2.8.0
+
+- Install : 
+ "make" will do.
+
+After compiled "scala Main" will write out a file called image.ppm in
+the current directory with the scene declared  in scene.pov
+
+
+Authors:
+
+Diego Echeverri.
+Adolfo Leon Builes.

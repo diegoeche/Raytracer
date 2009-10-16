@@ -116,8 +116,8 @@ object SceneParser extends StandardTokenParsers {
   def parse(s:String) = {
     val tokens = new lexical.Scanner(s)
     // Check there's only one camera and LightSource.
-    def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) >=0   &&
-                                             (tree count (_.isInstanceOf[LightSource])) >= 0
+    //def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) >=0   &&
+      //                                       (tree count (_.isInstanceOf[LightSource])) >= 0
     // lastFailure = None
     phrase(sceneP)(tokens) match {
       case Success(tree,_) => 
