@@ -1,29 +1,29 @@
-background { 
-  color Black 
+background {
+  color Black
 }
-sphere { 
-  <-2, 2, 3>, 
+sphere {
+  <-2, 2, 3>,
   2.5
-  pigment { 
-    color Blue 
-  } 
+  pigment {
+    color Blue
+  }
 }
-sphere { 
-  <2, 2, 5>, 
-  1.5 
-  pigment { 
-    color Red 
-  } 
+sphere {
+  <2, 2, 5>,
+  1.5
+  pigment {
+    color Red
+  }
 }
-light_source { 
-  <-10, 10, -10> 
+light_source {
+  <-10, 10, -10>
   color White
-}  
-plane { 
-  <0, 1, 0>, 
+}
+plane {
+  <0, 1, 0>,
   -0
-  pigment { 
-    color Green 
+  pigment {
+    color Green
   }
 }
 

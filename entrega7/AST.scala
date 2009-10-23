@@ -1,7 +1,7 @@
 import javax.vecmath._;
 import scala.Math._;
 
-case class Material(pigment: Color3f, ka: Double, kd: Double, ks: Double, n:Double)
+case class Material(pigment: Color3f, ka: Float, kd: Float, ks: Float, n:Float)
 
 class SceneElement
 abstract class Geometry {
@@ -42,9 +42,10 @@ case class Sphere(center:Vector3d, radius: Double)                    extends Ge
               point.add(r.origin)
               val normal = new Vector3d(point)
               normal.sub(this.center)
+              normal.normalize()
               range.maxT = t
 
-              Some(new Hit(t,normal,material))
+              Some(new Hit(t, normal, point, material))
             }
           }
         }
