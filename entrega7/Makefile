@@ -1,4 +1,4 @@
 all: 
-	fsc *.scala
+	fsc -unchecked *.scala
 clear:
 	rm *.class

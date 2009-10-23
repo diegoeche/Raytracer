@@ -3,11 +3,11 @@ import javax.vecmath._;
 import scala.util.parsing.combinator.lexical._
 import scala.util.parsing.combinator.syntactical._
 
-/** 
+/**
  * ExprLexical
  * this is copied from this address. Basic support for floatTokens
- * http://jim-mcbeath.blogspot.com/2008/09/scala-parser-combinators.html  
- */ 
+ * http://jim-mcbeath.blogspot.com/2008/09/scala-parser-combinators.html
+ */
 class ExprLexical extends StdLexical {
     override def token: Parser[Token] = floatingToken | super.token
 
@@ -65,117 +65,91 @@ object SceneParser extends StandardTokenParsers {
                              "sphere")
 
   // Doesn't accept decimals nor negatives
-  def valueP = opt("-") ~ numericLit ^^ 
+  def valueP = opt("-") ~ numericLit ^^
     {case Some(_) ~ s => -s.toDouble
      case None    ~ s   => s.toDouble}
 
   def finishP = "finish" ~> "{" ~> ("ambient"|"diffuse"|"phong"|"phong_size") ~ valueP <~ "}" ^^
                           {
-                           case "ambient"    ~ color => ("ambient"    ,color)
-                           case "diffuse"     ~ color => ("diffuse"   ,color)
-                           case "phong"      ~ color => ("phong"      ,color)
-                           case "phong_size" ~ color => ("phong_size" ,color)
-                           case "size"       ~ color => ("size"       ,color)
+                           case "ambient"    ~ color => ("ambient"    , color.toFloat)
+                           case "diffuse"    ~ color => ("diffuse"    , color.toFloat)
+                           case "phong"      ~ color => ("phong"      , color.toFloat)
+                           case "phong_size" ~ color => ("phong_size" , color.toFloat)
+                           case "size"       ~ color => ("size"       , color.toFloat)
                           }
 
-  def manyFinishP: Parser[List [(String,Double)]] = finishP*
-  
+  def manyFinishP: Parser[List [(String,Float)]] = finishP*
+
 
   def backgroundP = "background" ~>"{" ~> colorP <~ "}" ^^
                      { case color => new Background (new Color3f (color)) }
 
 
   def colorP  = "color" ~> ("Blue" | "Green" | "Red" | "Yellow" | "White" | "Black") ^^
-                       {case "Blue"   => Color.blue
-		        case "Green"  => Color.green
-		        case "Red"    => Color.red
-		        case "Yellow" => Color.yellow
-		        case "White"  => Color.white 
-		        case "Black"  => Color.black
+                       {case "Blue"   => new Color3f(Color.blue)
+		        case "Green"  => new Color3f(Color.green)
+		        case "Red"    => new Color3f(Color.red)
+		        case "Yellow" => new Color3f(Color.yellow)
+		        case "White"  => new Color3f(Color.white )
+		        case "Black"  => new Color3f(Color.black)
                       }
-                 
-  def pigmentP = "pigment" ~> "{" ~> colorP <~ "}" 
 
-  def vectorLitP = ("<" ~> valueP) ~ 
-                   ("," ~> valueP) ~ 
-                   ("," ~> valueP <~ ">") ^^ 
-                   {case x ~ y ~ z => new Vector3d(x.toDouble, 
-                                                   y.toDouble, 
+  def pigmentP = "pigment" ~> "{" ~> colorP <~ "}"
+
+  def vectorLitP = ("<" ~> valueP) ~
+                   ("," ~> valueP) ~
+                   ("," ~> valueP <~ ">") ^^
+                   {case x ~ y ~ z => new Vector3d(x.toDouble,
+                                                   y.toDouble,
                                                    z.toDouble)}
 
-  // This one lifts a common constructor of objects like sphere and plane 
-  def vectorValueP(cons: String, f: Function[(Vector3d, Double, Color3f,Double,Double,Double,Double), SceneObject]) = 
-                 (cons ~> "{" ~> vectorLitP) ~ 
-                  ("," ~> valueP ) ~
-                   (pigmentP)~ (manyFinishP <~ "}") ^^
-                   {
-                    //case center ~ radius ~ pigment ~ List () => f(center, radius, new Color3f ( pigment ))
-                    case center ~ radius ~ pigment ~ ls => 
+  // This one lifts a common constructor of objects like sphere and plane
+  def vectorValueP(cons: String, f: (Vector3d, Double, Color3f, Float, Float, Float, Float) => SceneObject) = {
+    (cons ~> "{" ~> vectorLitP) ~
+    ("," ~> valueP ) ~
+    (pigmentP)~ (manyFinishP <~ "}") ^^ {
+      case center ~ radius ~ pigment ~ ls => {
+        def fst[A, B] (t:(A,B)): A = t match {case (a,b) => a}
+        def snd[A, B] (t:(A,B)): B = t match {case (a,b) => b}
 
-                        val  ka = ls.find ( _ match {
-                       
-                                                  case ("ambient",_) => true
-                                                  case  _            => false
-                               }) match {
-                                 case Some ((_,v)) => v
-                                 case None         => 0.1
-                               }
-
-                       val  kd =  ls.find ( _ match {
-                                                  case ("diffuse",_) => true
-                                                  case  _            => false
-                               }) match {
-                                 case Some ((_,v)) => v
-                                 case None         => 0.7
-                               }
-                      
-                       val  ks =  ls.find ( _ match {
-                                                  case ("phong",_) => true
-                                                  case  _            => false
-                               }) match {
-                                 case Some ((_,v)) => v
-                                 case None         => 0.7
-                               }
-
-                       val n = ls.find ( _ match {
-                                                  case ("phong_size",_) => true
-                                                  case  _            => false
-                               }) match {
-                                 case Some ((_,v)) => v
-                                 case None         => 20.0
-                               }
-                     
-                      
-                      f(center, radius, new Color3f ( pigment),ka,kd,ks,n )
-                   }
-  
-  def sphereP = 
-    vectorValueP("sphere", {case (center,radius,pigment,ka,kd,ks,n) => 
+        def findReplace(s:String, d: Float): Float = {
+          val opt = ls.find (((x:String) => s == x) compose (fst[String,Float]));
+          return ((opt map (snd[String, Float])) getOrElse d);
+        }
+        val ka = findReplace("ambient"    , 0.1f)
+        val kd = findReplace("diffuse"    , 0.7f)
+        val ks = findReplace("phong"      , 0.7f)
+        val kn = findReplace("phong_size" , 20.0f)
+        f(center, radius, (new Color3f (pigment)), ka, kd, ks, kn)
+      }
+    }
+  }
+  def sphereP =
+    vectorValueP("sphere", {case (center,radius,pigment,ka,kd,ks,n) =>
       new SceneObject (new Sphere(center, radius), new Material(pigment,ka,kd,ks,n))})
 
-//  def planeP = 
-//  vectorValueP("plane", {case (center,radius,pigment,) => 
+//  def planeP =
+//  vectorValueP("plane", {case (center,radius,pigment,) =>
 //     new SceneObject (new Plane(center, radius), new Material(pigment))})
-  
+
   def cameraP = ("camera" ~> "{" ~> "location"~> vectorLitP ) ~
                 ( "look_at" ~> vectorLitP <~ "}") ^^
                 { case location ~ lookAt => new Camera (location,lookAt) }
 
-
-  def lightP = ("light_source" ~> "{" ~> vectorLitP)~(colorP <~ "}")^^ 
-               { case location ~ color => new LightSource (location,new Color3f (color)) }
+  def lightP = ("light_source" ~> "{" ~> vectorLitP) ~ (colorP <~ "}") ^^
+               { case location ~ color => new LightSource (location, color) }
 
 
   def ambientLightP = "ambient_light" ~>  colorP ^^ {
-                                                    case color => new AmbientLight ( new Color3f (color)) 
-                                                    }
+    case color => new AmbientLight (color)
+  }
 
 
   def globalSettingsP = "global_settings" ~> "{" ~> ambientLightP <~ "}" // We could get more global settings so that we can do something similar
                                                                          // to what is done for sceneObjP
-                          
 
-  def sceneObjP = sphereP |  cameraP | lightP | backgroundP | globalSettingsP
+
+  def sceneObjP = sphereP | cameraP | lightP | backgroundP | globalSettingsP
 
   // The scene is just a list of SceneObjects
   def sceneP: Parser[List[SceneElement]] = sceneObjP+
@@ -183,11 +157,12 @@ object SceneParser extends StandardTokenParsers {
   def parse(s:String) = {
     val tokens = new lexical.Scanner(s)
     // Check there's only one camera and LightSource.
-    //def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[Camera])) >=0   &&
-      //                                       (tree count (_.isInstanceOf[LightSource])) >= 0
+    // def checkTree (tree:List[SceneObject]) = (tree count (_.isInstanceOf[LightSource]) || ) >= 0 
+    // (tree count (_.isInstanceOf[Camera])) >=0  //  &&
+    
     // lastFailure = None
     phrase(sceneP)(tokens) match {
-      case Success(tree,_) => 
+      case Success(tree,_) =>
         if (true) { // checkTree(tree)
           Right(tree)
         }else{
