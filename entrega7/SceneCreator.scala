@@ -53,21 +53,15 @@ object Main extends Application {
       return direction
     }
      def specularIllumination(h: Hit, l: LightSource): Color3f = {
-       val direction = getLightDirection (h.location                       , l            )
-       val reflected = reflectedVector   (direction                        , h.normal     )
+       val direction = getLightDirection (h.location, l)
+       val reflected = reflectedVector   (direction , h.normal)
        val vrn       = pow               (reflected.dot(direction).toFloat , h.material.kn).toFloat;
-//       val temp    = (new Color3f(1,1,1)).scale (h.material.ks)
        val specular  = vrn * h.material.ks
-       println(specular)
+//       println(specular)
        val color     = ***(l.color, h.material.pigment)
        color.scale (specular)
        return color
-    //   var diffuse = (new Vector3d(direction)).dot(h.normal).toFloat 
-    //   diffuse = if (diffuse <= 0) 0 else diffuse
-    //   val color = ***(l.color, h.material.pigment)
-    //   println(diffuse)
-    //   color.scale(diffuse)
-    //   color.scale(h.material.kd)
+  
      }
 
     def diffuseIllumination(h: Hit, l: LightSource): Color3f = {
