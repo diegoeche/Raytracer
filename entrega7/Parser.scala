@@ -72,7 +72,7 @@ object SceneParser extends StandardTokenParsers {
   def finishP = "finish" ~> "{" ~> ("ambient"|"diffuse"|"phong"|"phong_size") ~ valueP <~ "}" ^^
                           {
                            case "ambient"    ~ color => ("ambient"    ,color)
-                           case "diffuse"     ~ color => ("diffuse"     ,color)
+                           case "diffuse"     ~ color => ("diffuse"   ,color)
                            case "phong"      ~ color => ("phong"      ,color)
                            case "phong_size" ~ color => ("phong_size" ,color)
                            case "size"       ~ color => ("size"       ,color)

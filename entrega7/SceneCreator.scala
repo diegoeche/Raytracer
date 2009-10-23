@@ -9,6 +9,8 @@ object Main extends Application {
       var image:Image = new Image (size,size)
       var camera = new OrtographicCamera (1d);
       var group = new Group ( l );
+      val Some(amb) = l.find(_.isInstanceOf[AmbientLight])
+      val lights = l.filter(_.isInstanceOf[LightSource])
       for (x <- 0 until size )
         {
           var px = (x.toDouble/(size/2.0)) - 1.0
@@ -17,8 +19,8 @@ object Main extends Application {
               var py = (y.toDouble/(size/2.0)) - 1.0;
               var ray = camera.generateRay( new Point2d (px,py));
                           
-              var h =group.intersect (ray).color
-              image.setColor ( x,y, h);
+              var h = (group.intersect(ray)).material
+              image.setColor ( x,y, h.pigment);
             }
           
         }
