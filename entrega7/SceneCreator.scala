@@ -1,4 +1,5 @@
 import javax.vecmath._;
+import scala.Math._;
 
 object Main extends Application {
   def process (l:List[SceneElement]):Unit = {
@@ -22,14 +23,56 @@ object Main extends Application {
     def *** (v1: Tuple3f, v2: Tuple3f) =
       new Color3f(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z)
 
-    def diffuseIllumination(h: Hit, l: LightSource): Color3f = {
-      val direction = new Vector3d(h.location)
+    def reflectedVector(v1: Vector3d, normal: Vector3d):Vector3d = {
+      var k = v1.dot(normal)
+      k *= (-2.0)
+      val dir = new Vector3d(normal)
+      dir.scale(k)
+      dir.add(v1)
+      dir.normalize()
+      return dir
+    }
+
+    // def calculateReflectedRay(i: Ray, pos: Point3d, normal: Vector3d) {
+      
+    // }
+    // public Ray CalcularReflectedRay(Ray incidente, Point3d posicion, Vector3d normal){
+    //   double k = incidente.getDireccion().dot(normal);
+    //   k = k * (-2.0);
+    //   Vector3d direccion = new Vector3d((k*normal.x)+incidente.getDireccion().x,
+    //     				(k*normal.y)+incidente.getDireccion().y,
+    //     				(k*normal.z)+incidente.getDireccion().z);
+    //   Vector3d pos = new Vector3d(posicion.x,posicion.y,posicion.z);
+    //   return new Ray(pos,direccion);
+      
+    // }
+    def getLightDirection(pos: Vector3d, l: LightSource): Vector3d = {
+      val direction = new Vector3d(pos)
       direction.sub(l.location)
       direction.normalize()
+      return direction
+    }
+    def specularIllumination(h: Hit, l: LightSource): Color3f = {
+      val direction = getLightDirection (h.location, l)
+      val reflected = reflectedVector   (h.ray.direction , h.normal)
+      var specular  = reflected.dot(direction)
+      specular = if (specular <= 0) 0 else specular
+      specular = pow(specular , h.material.kn);
+      specular = specular * h.material.ks
+
+//       println(specular)
+      val color     = ***(l.color, new Color3f(1,1,1))
+      color.scale (specular.toFloat)
+      return color
+  
+    }
+
+    def diffuseIllumination(h: Hit, l: LightSource): Color3f = {
+      val direction = getLightDirection(h.location, l)
       var diffuse = (new Vector3d(direction)).dot(h.normal).toFloat 
       diffuse = if (diffuse <= 0) 0 else diffuse
       val color = ***(l.color, h.material.pigment)
-      println(diffuse)
+//      println(diffuse)
       color.scale(diffuse)
       color.scale(h.material.kd)
       return color
@@ -43,6 +86,7 @@ object Main extends Application {
       amb.scale(mat.ka)
       val total = new Color3f()
       lights foreach ((l:LightSource) => total.add(diffuseIllumination(h, l))) // All diffuse
+      lights foreach ((l:LightSource) => total.add(specularIllumination(h, l))) // All specular
       total.add(amb) // Ambient
       total.clamp(0,1)
       return total;

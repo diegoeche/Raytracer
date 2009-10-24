@@ -1,7 +1,7 @@
 import javax.vecmath._;
 import scala.Math._;
 
-case class Material(pigment: Color3f, ka: Float, kd: Float, ks: Float, n:Float)
+case class Material(pigment: Color3f, ka: Float, kd: Float, ks: Float, kn:Float)
 
 class SceneElement
 abstract class Geometry {
@@ -22,10 +22,9 @@ case class Sphere(center:Vector3d, radius: Double)                    extends Ge
 
   override def intersect (r:Ray, range:Range, material: Material): Option [Hit]=
     {
-      var v            = new Vector3d ( r.origin.x - (center.x) , r.origin.y - (center.y),r.origin.z - (center.z ));
-
-      val dbg1 = pow (v.dot (r.direction),2.0)
-      val dbg2 = ((v.dot(v)) - pow (radius,2))
+      var v            = new Vector3d (r.origin.x - (center.x),
+                                       r.origin.y - (center.y),
+                                       r.origin.z - (center.z));
 
       var discriminant = pow (v.dot (r.direction),2.0) - ((v.dot(v)) - pow (radius,2));
 
@@ -45,7 +44,7 @@ case class Sphere(center:Vector3d, radius: Double)                    extends Ge
               normal.normalize()
               range.maxT = t
 
-              Some(new Hit(t, normal, point, material))
+              Some(new Hit(t, normal, point, material, r))
             }
           }
         }
