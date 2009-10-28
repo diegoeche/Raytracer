@@ -34,7 +34,7 @@ object Main extends Application {
     }
 
     // def calculateReflectedRay(i: Ray, pos: Point3d, normal: Vector3d) {
-      
+
     // }
     // public Ray CalcularReflectedRay(Ray incidente, Point3d posicion, Vector3d normal){
     //   double k = incidente.getDireccion().dot(normal);
@@ -44,7 +44,7 @@ object Main extends Application {
     //     				(k*normal.z)+incidente.getDireccion().z);
     //   Vector3d pos = new Vector3d(posicion.x,posicion.y,posicion.z);
     //   return new Ray(pos,direccion);
-      
+
     // }
     def getLightDirection(pos: Vector3d, l: LightSource): Vector3d = {
       val direction = new Vector3d(pos)
@@ -52,19 +52,17 @@ object Main extends Application {
       direction.normalize()
       return direction
     }
-    def specularIllumination(h: Hit, l: LightSource): Color3f = {
-      val direction = getLightDirection (h.location, l)
-      val reflected = reflectedVector   (h.ray.direction , h.normal)
+
+    def specularIllumination(r: Ray, m: Material, l: LightSource): Color3f = {
+      val direction = getLightDirection (r.origin, l)
+      val reflected = r.direction
       var specular  = reflected.dot(direction)
       specular = if (specular <= 0) 0 else specular
-      specular = pow(specular , h.material.kn);
-      specular = specular * h.material.ks
-
-//       println(specular)
+      specular = pow(specular , m.kn);
+      specular = specular * m.ks
       val color     = ***(l.color, new Color3f(1,1,1))
       color.scale (specular.toFloat)
       return color
-  
     }
 
     def diffuseIllumination(h: Hit, l: LightSource): Color3f = {
@@ -72,36 +70,47 @@ object Main extends Application {
       var diffuse = (new Vector3d(direction)).dot(h.normal).toFloat 
       diffuse = if (diffuse <= 0) 0 else diffuse
       val color = ***(l.color, h.material.pigment)
-//      println(diffuse)
       color.scale(diffuse)
       color.scale(h.material.kd)
       return color
     }
 
-
-    def calculateColor (h: Hit): Color3f = {
-      val mat = h.material
-      val color = mat.pigment
-      val amb = ***(color, ambient)
-      amb.scale(mat.ka)
-      val total = new Color3f()
-      lights foreach ((l:LightSource) => total.add(diffuseIllumination(h, l))) // All diffuse
-      lights foreach ((l:LightSource) => total.add(specularIllumination(h, l))) // All specular
-      total.add(amb) // Ambient
-      total.clamp(0,1)
-      return total;
+    def calculateColor (ray: Ray, depth: Int): Color3f = {
+      if (depth == 0) {
+        return new Color3f(0,0,0)
+      }else{
+        var hitP = group.intersect(ray)
+        hitP match {
+          case Some(hit) => {
+            val mat = hit.material
+            val color = mat.pigment
+            val amb = ***(color, ambient)
+            amb.scale(mat.ka)
+            val reflectedRay = new Ray(hit.location, reflectedVector(ray.direction, hit.normal))
+            val total = new Color3f()
+            lights foreach ((l:LightSource) =>
+              total.add(diffuseIllumination(hit, l))) // All diffuse
+            lights foreach ((l:LightSource) =>
+              total.add(specularIllumination(reflectedRay, mat, l))) // All specular
+            if(mat.reflection > 0) {
+              val reflectedColor = calculateColor(reflectedRay, depth - 1) // ***(calculateColor(reflectedRay, depth - 1), mat.pigment)
+              reflectedColor.scale(mat.reflection)
+              total.add(reflectedColor)
+            }
+            total.add(amb)
+            total.clamp(0,1)
+            return total
+          }
+          case None => background
+        }
+      }
     }
-
     for (x <- 0 until size ) {
       var px = (x.toDouble/(size/2.0)) - 1.0
       for (y <-0 until size) {
         var py = (y.toDouble/(size/2.0)) - 1.0;
         var ray = camera.generateRay(new Point2d (px,py));
-        var h = (group.intersect(ray))
-        h match {
-          case Some(c) => image.setColor(x, y, calculateColor(c));
-          case None    => image.setColor(x, y, background)
-        }
+        image.setColor(x, y, calculateColor(ray, 8))
       }
     }
     image.writeImage ();

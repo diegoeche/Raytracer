@@ -1,7 +1,12 @@
 import javax.vecmath._;
 import scala.Math._;
 
-case class Material(pigment: Color3f, ka: Float, kd: Float, ks: Float, kn:Float)
+case class Material(pigment: Color3f,
+                    ka: Float,
+                    kd: Float,
+                    ks: Float,
+                    kn:Float,
+                    reflection: Float)
 
 class SceneElement
 abstract class Geometry {
@@ -32,7 +37,7 @@ case class Sphere(center:Vector3d, radius: Double)                    extends Ge
         {
           var t1 = -(v.dot(r.direction)) + sqrt (discriminant);
           var t2 = -(v.dot(r.direction)) - sqrt (discriminant);
-          List(t1, t2) filter (t => t >= range.minT && t < range.maxT) match {
+          List(t1, t2) filter (t => t >= (range.minT + 0.000001) && t < range.maxT) match {
             case List() => None
             case l      => {
               val t = l.min
@@ -44,7 +49,7 @@ case class Sphere(center:Vector3d, radius: Double)                    extends Ge
               normal.normalize()
               range.maxT = t
 
-              Some(new Hit(t, normal, point, material, r))
+              Some(new Hit(t, normal, point, material))
             }
           }
         }
@@ -54,11 +59,3 @@ case class Sphere(center:Vector3d, radius: Double)                    extends Ge
 
 }
 
-// liftM2 (&&) (>=range.minT) (<range.maxT)
-// (&&) <$> (>=range.minT) <*> (<range.maxT)
-// liftA2 (&&) (>=range.minT) (<range.maxT)
-// import Applicative.Infix
-// (>=range.minT) <^ (&&) ^> (<range.maxT)
-// instance Monad (->) where
-// liftM a -> b -> m a -> m b
-// liftM2 a -> b -> c -> ma ...

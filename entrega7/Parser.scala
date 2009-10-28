@@ -58,10 +58,11 @@ object SceneParser extends StandardTokenParsers {
                              "light_source",
                              "location",
                              "look_at",
-                             "phong_size",
                              "phong",
+                             "phong_size",
                              "pigment",
                              "plane",
+                             "reflection",
                              "sphere")
 
   // Doesn't accept decimals nor negatives
@@ -69,13 +70,13 @@ object SceneParser extends StandardTokenParsers {
     {case Some(_) ~ s => -s.toDouble
      case None    ~ s   => s.toDouble}
 
-  def finishP = "finish" ~> "{" ~> ("ambient"|"diffuse"|"phong"|"phong_size") ~ valueP <~ "}" ^^
+  def finishValue = 
+    (("ambient"|"diffuse"|"phong"|"phong_size") ~ valueP) |
+     ("reflection" ~ ("{" ~> valueP <~ "}"))
+
+  def finishP = "finish" ~> "{" ~> finishValue <~ "}" ^^
                           {
-                           case "ambient"    ~ color => ("ambient"    , color.toFloat)
-                           case "diffuse"    ~ color => ("diffuse"    , color.toFloat)
-                           case "phong"      ~ color => ("phong"      , color.toFloat)
-                           case "phong_size" ~ color => ("phong_size" , color.toFloat)
-                           case "size"       ~ color => ("size"       , color.toFloat)
+                           case l ~ color => (l, color.toFloat)
                           }
 
   def manyFinishP: Parser[List [(String,Float)]] = finishP*
@@ -104,7 +105,7 @@ object SceneParser extends StandardTokenParsers {
                                                    z.toDouble)}
 
   // This one lifts a common constructor of objects like sphere and plane
-  def vectorValueP(cons: String, f: (Vector3d, Double, Color3f, Float, Float, Float, Float) => SceneObject) = {
+  def vectorValueP(cons: String, f: (Vector3d, Double, Color3f, Float, Float, Float, Float, Float) => SceneObject) = {
     (cons ~> "{" ~> vectorLitP) ~
     ("," ~> valueP ) ~
     (pigmentP)~ (manyFinishP <~ "}") ^^ {
@@ -120,17 +121,19 @@ object SceneParser extends StandardTokenParsers {
         val kd = findReplace("diffuse"    , 0.7f)
         val ks = findReplace("phong"      , 0.7f)
         val kn = findReplace("phong_size" , 20.0f)
-        f(center, radius, (new Color3f (pigment)), ka, kd, ks, kn)
+        val ref = findReplace("reflection", 0.0f)
+        f(center, radius, (new Color3f (pigment)), ka, kd, ks, kn, ref)
       }
     }
   }
-  def sphereP =
-    vectorValueP("sphere", {case (center,radius,pigment,ka,kd,ks,n) =>
-      new SceneObject (new Sphere(center, radius), new Material(pigment,ka,kd,ks,n))})
 
-//  def planeP =
-//  vectorValueP("plane", {case (center,radius,pigment,) =>
-//     new SceneObject (new Plane(center, radius), new Material(pigment))})
+  def sphereP =
+    vectorValueP("sphere", {case (center,radius,pigment,ka,kd,ks,n,ref) =>
+      new SceneObject (new Sphere(center, radius), new Material(pigment,ka,kd,ks,n,ref))})
+
+  def planeP =
+    vectorValueP("plane", {case (center,radius,pigment,ka,kd,ks,n,ref) =>
+      new SceneObject (new Plane(center, radius), new Material(pigment,ka,kd,ks,n,ref))})
 
   def cameraP = ("camera" ~> "{" ~> "location"~> vectorLitP ) ~
                 ( "look_at" ~> vectorLitP <~ "}") ^^
@@ -149,7 +152,7 @@ object SceneParser extends StandardTokenParsers {
                                                                          // to what is done for sceneObjP
 
 
-  def sceneObjP = sphereP | cameraP | lightP | backgroundP | globalSettingsP
+  def sceneObjP = planeP | sphereP | cameraP | lightP | backgroundP | globalSettingsP
 
   // The scene is just a list of SceneObjects
   def sceneP: Parser[List[SceneElement]] = sceneObjP+
