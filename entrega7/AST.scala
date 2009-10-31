@@ -10,6 +10,7 @@ case class Material(pigment: Color3f,
                     reflection: Float)
 
 class SceneElement
+
 abstract class Geometry {
   def intersect (r:Ray, range:Range, material:Material): Option [Hit];
 }
