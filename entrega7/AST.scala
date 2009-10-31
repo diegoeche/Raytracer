@@ -49,6 +49,4 @@ case class Sphere(center:Vector3d, radius: Double)                    extends Ge
     else
       return None;
   }
-
 }
-
