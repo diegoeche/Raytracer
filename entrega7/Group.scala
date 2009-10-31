@@ -5,8 +5,7 @@ import scala.Math.MAX_DOUBLE;
 
 case class Group (var vector:List [SceneElement] )
 {
-  def intersect(ray:Ray): Option[Hit] = {
-    var range   = new Range (0.0,MAX_DOUBLE);
+  def intersect(range: Range, ray:Ray): Option[Hit] = {
     var sceneObjects = vector filter (_.isInstanceOf[SceneObject])
     sceneObjects.foldLeft(None: Option[Hit])({
       case (p, (SceneObject (g, m))) => {
@@ -17,4 +16,7 @@ case class Group (var vector:List [SceneElement] )
       }
     })
   }
+  def intersect(ray:Ray): Option[Hit] = intersect(new Range (0.0, MAX_DOUBLE), ray)
+
+
 }

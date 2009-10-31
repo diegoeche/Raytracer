@@ -1,5 +1,6 @@
 import javax.vecmath._;
 import scala.Math._;
+import NiceVector._;
 
 case class Material(pigment: Color3f,
                     ka: Float,
@@ -19,43 +20,34 @@ sealed case class LightSource  (location: Vector3d, color: Color3f)     extends 
 sealed case class AmbientLight (color : Color3f)                        extends SceneElement
 sealed case class SceneObject  (geometry: Geometry, material: Material) extends SceneElement
 sealed case class Plane        (point:Vector3d	 , distance: Double)   extends Geometry {
-
   override def intersect (r:Ray, range:Range, material: Material): Option [Hit] = None
 
 }
 case class Sphere(center:Vector3d, radius: Double)                    extends Geometry {
 
-  override def intersect (r:Ray, range:Range, material: Material): Option [Hit]=
-    {
-      var v            = new Vector3d (r.origin.x - (center.x),
-                                       r.origin.y - (center.y),
-                                       r.origin.z - (center.z));
+  override def intersect (r:Ray, range:Range, material: Material): Option [Hit]= {
+    var v:NiceVector = r.origin - center
+ 
+    var discriminant = pow (v * r.direction, 2.0) - ((v * v) - (radius * radius));
 
-      var discriminant = pow (v.dot (r.direction),2.0) - ((v.dot(v)) - pow (radius,2));
-
-      if (discriminant >= 0 )
-        {
-          var t1 = -(v.dot(r.direction)) + sqrt (discriminant);
-          var t2 = -(v.dot(r.direction)) - sqrt (discriminant);
-          List(t1, t2) filter (t => t >= (range.minT + 0.000001) && t < range.maxT) match {
-            case List() => None
-            case l      => {
-              val t = l.min
-              val point = new Vector3d(r.direction)
-              point.scale(t)
-              point.add(r.origin)
-              val normal = new Vector3d(point)
-              normal.sub(this.center)
-              normal.normalize()
-              range.maxT = t
-
-              Some(new Hit(t, normal, point, material))
-            }
-          }
+    if (discriminant >= 0 ) {
+      val dot = - (v * r.direction)
+      var t1 = dot + sqrt (discriminant);
+      var t2 = dot - sqrt (discriminant);
+      List(t1, t2) filter (t => t >= (range.minT + 0.000001) && t < range.maxT) match {
+        case List() => None
+        case l      => {
+          val t = l.min
+          val point: NiceVector = ((r.direction:NiceVector) scale t) + r.origin
+          val normal = (point - this.center).normalize
+          range.maxT = t
+          Some(new Hit(t, normal.v, point.v, material))
         }
-      else
-        return None;
+      }
     }
+    else
+      return None;
+  }
 
 }
 

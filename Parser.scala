@@ -3,11 +3,11 @@ import javax.vecmath._;
 import scala.util.parsing.combinator.lexical._
 import scala.util.parsing.combinator.syntactical._
 
-/** 
+/**
  * ExprLexical
  * this is copied from this address. Basic support for floatTokens
- * http://jim-mcbeath.blogspot.com/2008/09/scala-parser-combinators.html  
- */ 
+ * http://jim-mcbeath.blogspot.com/2008/09/scala-parser-combinators.html
+ */
 class ExprLexical extends StdLexical {
     override def token: Parser[Token] = floatingToken | super.token
 
@@ -58,10 +58,10 @@ object SceneParser extends StandardTokenParsers {
                              "White")
 
   // Doesn't accept decimals nor negatives
-  def valueP = opt("-") ~ numericLit ^^ 
+  def valueP = opt("-") ~ numericLit ^^
     {case Some(_) ~ s => -s.toDouble
      case None    ~ s   => s.toDouble}
-  
+
 
   def backgroundP = "background" ~>"{" ~> colorP <~ "}" ^^
                      { case color => new Background (new Color3f (color)) }
@@ -72,40 +72,40 @@ object SceneParser extends StandardTokenParsers {
 		        case "Green"  => Color.green
 		        case "Red"    => Color.red
 		        case "Yellow" => Color.yellow
-		        case "White"  => Color.white 
+		        case "White"  => Color.white
 		        case "Black"  => Color.black
                       }
-                 
-  def pigmentP = "pigment" ~> "{" ~> colorP <~ "}" 
 
-  def vectorLitP = ("<" ~> valueP) ~ 
-                   ("," ~> valueP) ~ 
-                   ("," ~> valueP <~ ">") ^^ 
-                   {case x ~ y ~ z => new Vector3d(x.toDouble, 
-                                                   y.toDouble, 
+  def pigmentP = "pigment" ~> "{" ~> colorP <~ "}"
+
+  def vectorLitP = ("<" ~> valueP) ~
+                   ("," ~> valueP) ~
+                   ("," ~> valueP <~ ">") ^^
+                   {case x ~ y ~ z => new Vector3d(x.toDouble,
+                                                   y.toDouble,
                                                    -z.toDouble)}
 
-  // This one lifts a common constructor of objects like sphere and plane 
-  def vectorValueP(cons: String, f: Function[(Vector3d, Double, Color3f), SceneObject]) = 
-                 (cons ~> "{" ~> vectorLitP) ~ 
+  // This one lifts a common constructor of objects like sphere and plane
+  def vectorValueP(cons: String, f: Function[(Vector3d, Double, Color3f), SceneObject]) =
+                 (cons ~> "{" ~> vectorLitP) ~
                   ("," ~> valueP ) ~
                    (pigmentP <~ "}") ^^
                   {case center ~ radius ~ pigment=> f(center, radius, new Color3f ( pigment ))}
-  
-  def sphereP = 
-    vectorValueP("sphere", {case (center,radius,pigment) => 
+
+  def sphereP =
+    vectorValueP("sphere", {case (center,radius,pigment) =>
       new SceneObject (new Sphere(center, radius), new Material(pigment))})
 
-  def planeP = 
-    vectorValueP("plane", {case (center,radius,pigment) => 
+  def planeP =
+    vectorValueP("plane", {case (center,radius,pigment) =>
       new SceneObject (new Plane(center, radius), new Material(pigment))})
-  
+
   def cameraP = ("camera" ~> "{" ~> "location"~> vectorLitP ) ~
                 ( "look_at" ~> vectorLitP <~ "}") ^^
                 { case location ~ lookAt => new Camera (location,lookAt) }
 
   def lightP = ("light_source" ~> "{" ~> vectorLitP)~
-               (colorP <~ "}")^^ 
+               (colorP <~ "}")^^
                { case location ~ color => new LightSource (location,new Color3f (color)) }
 
   def sceneObjP = sphereP | planeP | cameraP | lightP | backgroundP
@@ -120,7 +120,7 @@ object SceneParser extends StandardTokenParsers {
                                              (tree count (_.isInstanceOf[LightSource])) >= 0
     // lastFailure = None
     phrase(sceneP)(tokens) match {
-      case Success(tree,_) => 
+      case Success(tree,_) =>
         if (true) { // checkTree(tree)
           Right(tree)
         }else{

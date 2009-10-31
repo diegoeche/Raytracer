@@ -66,8 +66,17 @@ sphere {
 
 
 light_source {
-  <-10, 10, -10>
-  color White
+  <0, 5, 0>
+  color Blue
+}
+
+light_source {
+  <0, -5, 0>
+  color Red
+}
+light_source {
+  <0, 0, 0>
+  color Green
 }
 
 global_settings {ambient_light color White}
