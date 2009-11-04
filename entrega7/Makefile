@@ -1,4 +1,4 @@
 all: 
-	fsc -make:changed -unchecked *.scala
+	fsc  -unchecked *.scala
 clear:
 	rm *.class

@@ -4,29 +4,33 @@ import NiceVector._;
 
 object Main extends Application {
   def process (l:List[SceneElement]):Unit = {
-    val size = 300;
+    val size = 600;
     var image:Image = new Image (size,size)
     var camera = new OrtographicCamera (1d);
     var group = new Group ( l );
-
+    var dflag = 1
     def getBlackAsDefaultBackground() =
       l.find(_.isInstanceOf[Background]) map (_.asInstanceOf[Background].color) getOrElse (new Color3f(0,0,0))
     def getBlackAsDefaultAmbient() =
       l.find(_.isInstanceOf[AmbientLight]) map (_.asInstanceOf[AmbientLight].color) getOrElse (new Color3f(0,0,0))
 
-    // def getBlackAsDefault[A](f: A => Color3f) =
-    //   (l.find(_.isInstanceOf[A])) map (f compose ((x:Object) => x.asInstanceOf[A])) getOrElse (new Color3f(0,0,0))
-
     val ambient    = getBlackAsDefaultAmbient()
     val background = getBlackAsDefaultBackground()
     val lights     = l.filter(_.isInstanceOf[LightSource]).asInstanceOf[List[LightSource]]
 
-    def *** (v1: Tuple3f, v2: Tuple3f) =
-      new Color3f(v1.x * v2.x, v1.y * v2.y, v1.z * v2.z)
-
     def reflectedVector(v1: Vector3d, normal: Vector3d):Vector3d = {
       var k = (v1 * normal) * -2.0
       (((normal:NiceVector) scale k) + v1).normalize.v
+    }
+
+    def refractedVector(v1: Vector3d, normal: Vector3d, n1: Double, n2: Double): Vector3d = {
+      val n = n1 / n2
+      val c1 = -(normal * v1)
+      val c2 = Math.sqrt(1 - (n * n) * (1 - (c1 * c1)))
+      val normalNV:NiceVector = normal
+      val v1NV:NiceVector = v1
+      val rr:NiceVector = (v1NV scale n) + (normalNV scale (n * c1 - c2)) 
+      return rr.normalize.v
     }
 
     def getLightDirection(pos: Vector3d, l: LightSource): Vector3d =
@@ -49,7 +53,7 @@ object Main extends Application {
       return (l.color *** h.material.pigment) scale (diffuse * h.material.kd).toDouble
     }
 
-    def calculateColor (ray: Ray, depth: Int): Color3f = {
+    def calculateColor (ray: Ray, depth: Int, currentN: Option[Double]): Color3f = {
       if (depth == 0) {
         return new Color3f(0,0,0)
       }else{
@@ -74,9 +78,25 @@ object Main extends Application {
             visibleLigths foreach ((l:LightSource) =>
               total.add(specularIllumination(reflectedRay, mat, l))) // All specular
             if(mat.reflection > 0) {
-              val reflectedColor = calculateColor(reflectedRay, depth - 1) // ***(calculateColor(reflectedRay, depth - 1), mat.pigment)
-              reflectedColor.scale(mat.reflection)
-              total.add(reflectedColor)
+              val reflectedColor:NiceVector = calculateColor(reflectedRay, depth - 1, None)
+              total.add(reflectedColor scale mat.reflection)
+            }
+            if(mat.kr > 0) {
+              val (n1,n2) = currentN match {
+                case None   => (1., mat.refraction)
+                case Some(n) => (n, 1.)
+              }
+              // println(n1,n2)
+              val refractedV = refractedVector(ray.direction, hit.normal, n1, n2)
+              val refractedRay = new Ray(hit.location, refractedV)
+              val refractedColor:NiceVector =
+                if (currentN.isEmpty) {
+                  calculateColor(refractedRay, depth - 1, Some(n2))
+                } else {
+                  calculateColor(refractedRay, depth - 1, None)
+                }
+
+              total.add(refractedColor scale mat.kr)
             }
             total.add(amb)
             total.clamp(0,1)
@@ -91,7 +111,7 @@ object Main extends Application {
       for (y <-0 until size) {
         var py = (y.toDouble/(size/2.0)) - 1.0;
         var ray = camera.generateRay(new Point2d (px,py));
-        image.setColor(x, y, calculateColor(ray, 8))
+        image.setColor(x, y, calculateColor(ray, 8, None))
       }
     }
     image.writeImage ();

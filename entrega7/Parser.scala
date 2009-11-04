@@ -55,6 +55,7 @@ object SceneParser extends StandardTokenParsers {
                              "diffuse",
                              "finish",
                              "global_settings",
+                             "kr", // FIXME
                              "light_source",
                              "location",
                              "look_at",
@@ -63,6 +64,7 @@ object SceneParser extends StandardTokenParsers {
                              "pigment",
                              "plane",
                              "reflection",
+                             "refraction_index", // FIXME
                              "sphere")
 
   // Doesn't accept decimals nor negatives
@@ -70,21 +72,22 @@ object SceneParser extends StandardTokenParsers {
     {case Some(_) ~ s => -s.toDouble
      case None    ~ s   => s.toDouble}
 
-  def finishValue = 
-    (("ambient"|"diffuse"|"phong"|"phong_size") ~ valueP) |
+  def finishValue =
+    (("ambient"               |
+      "diffuse"               |
+      "refraction_index"      |
+      "kr"                    |
+      "phong"                 |
+      "phong_size") ~ valueP) |
      ("reflection" ~ ("{" ~> valueP <~ "}"))
 
   def finishP = "finish" ~> "{" ~> finishValue <~ "}" ^^
-                          {
-                           case l ~ color => (l, color.toFloat)
-                          }
+  { case l ~ color => (l, color.toFloat) }
 
   def manyFinishP: Parser[List [(String,Float)]] = finishP*
 
-
   def backgroundP = "background" ~>"{" ~> colorP <~ "}" ^^
                      { case color => new Background (new Color3f (color)) }
-
 
   def colorP  = "color" ~> ("Blue" | "Green" | "Red" | "Yellow" | "White" | "Black") ^^
                        {case "Blue"   => new Color3f(Color.blue)
@@ -105,7 +108,9 @@ object SceneParser extends StandardTokenParsers {
                                                    z.toDouble)}
 
   // This one lifts a common constructor of objects like sphere and plane
-  def vectorValueP(cons: String, f: (Vector3d, Double, Color3f, Float, Float, Float, Float, Float) => SceneObject) = {
+  def sceneObjectP(cons: String, f: (Vector3d, 
+                                     Double, 
+                                     Material) => SceneObject) = {
     (cons ~> "{" ~> vectorLitP) ~
     ("," ~> valueP ) ~
     (pigmentP)~ (manyFinishP <~ "}") ^^ {
@@ -121,19 +126,28 @@ object SceneParser extends StandardTokenParsers {
         val kd = findReplace("diffuse"    , 0.7f)
         val ks = findReplace("phong"      , 0.7f)
         val kn = findReplace("phong_size" , 20.0f)
-        val ref = findReplace("reflection", 0.0f)
-        f(center, radius, (new Color3f (pigment)), ka, kd, ks, kn, ref)
+        val kr = findReplace("kr"         , 0f)
+        val reflection = findReplace("reflection", 0.0f)
+        val refraction = findReplace("refraction_index", 0.0f)
+        val material = new Material(new Color3f (pigment),ka,kd,ks,kn,kr,reflection,refraction);
+        f(center, radius, material)
       }
     }
   }
 
   def sphereP =
-    vectorValueP("sphere", {case (center,radius,pigment,ka,kd,ks,n,ref) =>
-      new SceneObject (new Sphere(center, radius), new Material(pigment,ka,kd,ks,n,ref))})
+    sceneObjectP("sphere", {
+      case (center, radius, material) => {
+        new SceneObject (new Sphere(center, radius), material)
+      }
+    })
 
   def planeP =
-    vectorValueP("plane", {case (center,radius,pigment,ka,kd,ks,n,ref) =>
-      new SceneObject (new Plane(center, radius), new Material(pigment,ka,kd,ks,n,ref))})
+    sceneObjectP("plane", {
+      case (center, radius, material) => {
+        new SceneObject (new Plane(center, radius), material)
+      }
+    })
 
   def cameraP = ("camera" ~> "{" ~> "location"~> vectorLitP ) ~
                 ( "look_at" ~> vectorLitP <~ "}") ^^
@@ -142,15 +156,13 @@ object SceneParser extends StandardTokenParsers {
   def lightP = ("light_source" ~> "{" ~> vectorLitP) ~ (colorP <~ "}") ^^
                { case location ~ color => new LightSource (location, color) }
 
-
   def ambientLightP = "ambient_light" ~>  colorP ^^ {
     case color => new AmbientLight (color)
   }
 
-
-  def globalSettingsP = "global_settings" ~> "{" ~> ambientLightP <~ "}" // We could get more global settings so that we can do something similar
-                                                                         // to what is done for sceneObjP
-
+  def globalSettingsP = "global_settings" ~> "{" ~> ambientLightP <~ "}"
+  // We could get more global settings so that we can do something similar
+  // to what is done for sceneObjP
 
   def sceneObjP = planeP | sphereP | cameraP | lightP | backgroundP | globalSettingsP
 
